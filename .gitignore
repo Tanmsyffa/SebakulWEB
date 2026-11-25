@@ -4,34 +4,34 @@
 !.env.example
 
 # Next.js output and local caches
-.next/
-.next-dev/
-out/
-build/
-coverage/
+/.next/
+/.next-dev/
+/out/
+/build/
+/coverage/
 *.tsbuildinfo
 
 # Dependencies and package-manager caches
-node_modules/
-.bun/
-.npm/
+/node_modules/
+/.bun/
+/.npm/
 
 # Vercel local project metadata
-.vercel/
+/.vercel/
 
-# Local-only docs, mockups, and SQL migrations (excluded from Git)
-docs/
-mock-up/
-mockup/
-sql-migrations/
-supabase/
-drizzle/
-src/db/migrations/
-src/db/*.sql
+# Local-only docs, mockups, and SQL migrations (root-anchored so src/lib/supabase is tracked)
+/docs/
+/mock-up/
+/mockup/
+/sql-migrations/
+/supabase/
+/drizzle/
+/src/db/migrations/
+/src/db/*.sql
 *.sql
 
 # OS and editor noise
-cspell.json
+/cspell.json
 .DS_Store
 Thumbs.db
 *.log
