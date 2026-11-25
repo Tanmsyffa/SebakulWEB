@@ -1,0 +1,37 @@
+# Secrets and local-only environment files
+.env
+.env.*
+!.env.example
+
+# Next.js output and local caches
+.next/
+.next-dev/
+out/
+build/
+coverage/
+*.tsbuildinfo
+
+# Dependencies and package-manager caches
+node_modules/
+.bun/
+.npm/
+
+# Vercel local project metadata
+.vercel/
+
+# Local-only docs, mockups, and SQL migrations (excluded from Git)
+docs/
+mock-up/
+mockup/
+sql-migrations/
+supabase/
+drizzle/
+src/db/migrations/
+src/db/*.sql
+*.sql
+
+# OS and editor noise
+cspell.json
+.DS_Store
+Thumbs.db
+*.log
