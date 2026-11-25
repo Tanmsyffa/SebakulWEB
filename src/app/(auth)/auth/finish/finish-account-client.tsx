@@ -32,9 +32,13 @@ export function FinishAccountClient() {
     const search = new URLSearchParams(window.location.search);
     const fragment = new URLSearchParams(window.location.hash.slice(1));
     const code = search.get('code');
+    const tokenHash = search.get('token_hash');
+    const otpType = search.get('type');
+    const isValidOtpType = otpType === 'recovery' || otpType === 'invite';
     const linkError = search.get('error') || fragment.get('error');
     const emailLink =
       Boolean(code) ||
+      Boolean(tokenHash && isValidOtpType) ||
       (fragment.has('access_token') &&
         ['invite', 'recovery'].includes(fragment.get('type') ?? ''));
 
@@ -55,7 +59,20 @@ export function FinishAccountClient() {
     const supabase = createBrowserClient();
     async function initialize() {
       try {
-        if (code) {
+        if (tokenHash && isValidOtpType) {
+          const verified = await supabase.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: otpType,
+          });
+          if (verified.error) {
+            if (active) {
+              setLinkProblem('invalid');
+              setMessage('Tautan aktivasi tidak valid atau kedaluwarsa. Minta tautan baru.');
+            }
+            return;
+          }
+          window.history.replaceState({}, '', '/auth/finish');
+        } else if (code) {
           const result = await supabase.auth.exchangeCodeForSession(code);
           if (result.error) {
             if (active) {
@@ -64,6 +81,7 @@ export function FinishAccountClient() {
             }
             return;
           }
+          window.history.replaceState({}, '', '/auth/finish');
         }
         const result = await supabase.auth.getUser();
         if (active) {

@@ -9,6 +9,7 @@ import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { createBrowserClient } from '@/lib/supabase/client';
+import { requestPasswordResetEmail } from './actions';
 import { AuthCenteredLayout } from '../../_components/auth-shell';
 
 export function ResetPasswordClient() {
@@ -34,14 +35,25 @@ export function ResetPasswordClient() {
     setBusy(true);
 
     try {
-      const supabase = createBrowserClient();
-      const { error } = await supabase.auth.resetPasswordForEmail(trimmed, {
-        redirectTo: `${window.location.origin}/auth/finish`,
-      });
-      if (error && error.status === 429) {
-        setErrorMessage('Terlalu banyak permintaan. Tunggu beberapa saat lalu coba lagi.');
+      const result = await requestPasswordResetEmail(trimmed);
+      if (result.status === 'fallback_supabase') {
+        const supabase = createBrowserClient();
+        const { error } = await supabase.auth.resetPasswordForEmail(trimmed, {
+          redirectTo: `${window.location.origin}/auth/finish`,
+        });
+        if (error && error.status === 429) {
+          setErrorMessage('Terlalu banyak permintaan. Tunggu beberapa saat lalu coba lagi.');
+          return;
+        }
+        setMessage('Jika email terdaftar, tautan pengaturan kata sandi telah dikirim.');
         return;
       }
+
+      if (result.status === 'rate_limited' || result.status === 'error') {
+        setErrorMessage(result.message);
+        return;
+      }
+
       setMessage('Jika email terdaftar, tautan pengaturan kata sandi telah dikirim.');
     } catch {
       setErrorMessage('Tidak dapat terhubung ke layanan autentikasi. Periksa koneksi Anda.');
