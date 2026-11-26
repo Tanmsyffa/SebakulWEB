@@ -68,7 +68,8 @@ export function RoleSwitcher({ roles, activeRole, className }: RoleSwitcherProps
   }, [open]);
 
   const switchRole = async (role: UserRoleType) => {
-    document.cookie = `sebakul_active_role=${role};path=/;max-age=${60 * 60 * 24 * 365}`;
+    const secureFlag = window.location.protocol === 'https:' ? ';Secure' : '';
+    document.cookie = `sebakul_active_role=${role};path=/;max-age=${60 * 60 * 24 * 365};SameSite=Lax${secureFlag}`;
     setOpen(false);
     router.push(roleLanding[role]);
     router.refresh();

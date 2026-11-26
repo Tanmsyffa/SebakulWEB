@@ -86,7 +86,7 @@ export function exportPDF(options: PDFExportOptions): void {
 
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
-  doc.text("Sistem Manajemen Sentra Kuliner", margin, 18);
+  doc.text("SEntra Beverages And KULiner", margin, 18);
 
   // Print date on right side
   const printDate = new Date().toLocaleDateString("id-ID", {

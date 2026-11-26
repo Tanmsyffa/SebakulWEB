@@ -9,7 +9,7 @@ export const createTransactionSchema = z.object({
     .string()
     .uuid("Idempotency key harus berupa UUID v4"),
   type: z.enum(["INCOME", "EXPENSE"], {
-    required_error: "Tipe transaksi harus dipilih",
+    error: "Tipe transaksi harus dipilih",
   }),
   category: z
     .string()
@@ -17,7 +17,7 @@ export const createTransactionSchema = z.object({
     .min(1, "Kategori wajib diisi")
     .max(100, "Kategori maksimal 100 karakter"),
   amount: z
-    .number({ required_error: "Jumlah wajib diisi" })
+    .number({ error: "Jumlah wajib diisi" })
     .int("Jumlah harus bilangan bulat")
     .positive("Jumlah harus lebih dari 0")
     .max(999_999_999, "Jumlah terlalu besar"),
@@ -49,7 +49,7 @@ export const updateInventorySchema = z.object({
     .min(1, "Satuan wajib diisi")
     .max(50, "Satuan maksimal 50 karakter"),
   currentStock: z
-    .number({ required_error: "Stok saat ini wajib diisi" })
+    .number({ error: "Stok saat ini wajib diisi" })
     .int("Stok harus bilangan bulat")
     .min(0, "Stok tidak boleh negatif")
     .max(1_000_000, "Stok maksimal 1.000.000"),
@@ -78,7 +78,7 @@ export const createMenuItemSchema = z.object({
     .max(500, "Deskripsi maksimal 500 karakter")
     .optional(),
   price: z
-    .number({ required_error: "Harga wajib diisi" })
+    .number({ error: "Harga wajib diisi" })
     .int("Harga harus bilangan bulat")
     .positive("Harga harus lebih dari 0")
     .max(999_999_999, "Harga terlalu besar"),

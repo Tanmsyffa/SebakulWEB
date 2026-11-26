@@ -1,9 +1,9 @@
 'use server';
 
-import { eq } from 'drizzle-orm';
+import { and, desc, eq, gte } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '@/db';
-import { users } from '@/db/schema';
+import { auditLogs, users } from '@/db/schema';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 const emailSchema = z
@@ -14,7 +14,9 @@ const emailSchema = z
   .transform((val) => val.toLowerCase());
 
 const cooldownByEmail = new Map<string, number>();
-const COOLDOWN_MS = 45_000;
+const COOLDOWN_MS = 60_000;
+const MAX_REQUESTS_PER_HOUR = 5;
+const ONE_HOUR_MS = 60 * 60 * 1000;
 
 function cleanEnv(raw: string | undefined): string {
   return (raw ?? '').trim().replace(/^['"]+|['"]+$/g, '').trim();
@@ -94,6 +96,36 @@ export async function requestPasswordResetEmail(rawEmail: string): Promise<Reque
     return { status: 'sent' };
   }
 
+  // Persistent serverless rate limiting backed by Postgres audit_logs
+  const oneHourAgo = new Date(now - ONE_HOUR_MS);
+  const recentResets = await db
+    .select({ createdAt: auditLogs.createdAt })
+    .from(auditLogs)
+    .where(
+      and(
+        eq(auditLogs.actorId, account.id),
+        eq(auditLogs.action, 'REQUEST_PASSWORD_RESET'),
+        gte(auditLogs.createdAt, oneHourAgo)
+      )
+    )
+    .orderBy(desc(auditLogs.createdAt))
+    .limit(MAX_REQUESTS_PER_HOUR);
+
+  if (recentResets.length >= MAX_REQUESTS_PER_HOUR) {
+    return {
+      status: 'rate_limited',
+      message: 'Terlalu banyak permintaan dalam satu jam terakhir. Coba lagi nanti.',
+    };
+  }
+
+  const latestReset = recentResets[0];
+  if (latestReset && now - new Date(latestReset.createdAt).getTime() < COOLDOWN_MS) {
+    return {
+      status: 'rate_limited',
+      message: 'Tautan baru saja dikirim. Tunggu 1 menit sebelum meminta ulang.',
+    };
+  }
+
   const baseUrl = resolveSafeBaseUrl();
   const supabaseAdmin = createAdminClient();
   const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
@@ -147,6 +179,14 @@ export async function requestPasswordResetEmail(rawEmail: string): Promise<Reque
       message: 'Gagal mengirim email pemulihan. Periksa konfigurasi RESEND_API_KEY Anda.',
     };
   }
+
+  await db.insert(auditLogs).values({
+    actorId: account.id,
+    action: 'REQUEST_PASSWORD_RESET',
+    entityType: 'users',
+    entityId: account.id,
+    newValue: JSON.stringify({ channel: 'resend' }),
+  });
 
   return { status: 'sent' };
 }
