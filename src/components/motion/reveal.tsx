@@ -49,8 +49,6 @@ export function FadeIn({
   );
 }
 
-export const Reveal = FadeIn;
-
 export interface StaggerProps extends Omit<HTMLMotionProps<'div'>, 'ref'> {
   as?: 'div' | 'ul' | 'ol' | 'section';
   staggerMs?: number;

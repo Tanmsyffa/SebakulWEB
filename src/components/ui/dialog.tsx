@@ -279,31 +279,3 @@ export function DialogFooter({
     </div>
   );
 }
-
-export function DialogClose({
-  children,
-  asChild,
-  className,
-}: {
-  children: React.ReactNode;
-  asChild?: boolean;
-  className?: string;
-}) {
-  const { setOpen } = React.useContext(DialogContext);
-
-  if (asChild && React.isValidElement(children)) {
-    const child = children as React.ReactElement<{ onClick?: React.MouseEventHandler }>;
-    return React.cloneElement(child, {
-      onClick: (event: React.MouseEvent) => {
-        child.props.onClick?.(event);
-        if (!event.defaultPrevented) setOpen(false);
-      },
-    } as Partial<typeof child.props>);
-  }
-
-  return (
-    <button type="button" onClick={() => setOpen(false)} className={className}>
-      {children}
-    </button>
-  );
-}

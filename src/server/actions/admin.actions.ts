@@ -194,8 +194,6 @@ export async function updateWarung(input: z.input<typeof updateWarungSchema>) {
   revalidatePath('/sentra');
   revalidatePath('/sentra/tagihan');
   revalidatePath('/warung');
-  revalidatePath(`/menu/${result.oldSlug}`);
-  revalidatePath(`/menu/${result.warung.slug}`);
   return { success: true, warung: result.warung, lapakChanges: result.lapakChanges };
 }
 

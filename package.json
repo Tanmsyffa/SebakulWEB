@@ -9,8 +9,7 @@
     "lint": "eslint src",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio",
-    "auth:bootstrap": "node --env-file=.env.local scripts/bootstrap-super-admin.mjs"
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5",
@@ -25,7 +24,6 @@
     "motion": "^12.43.0",
     "next": "^15.1",
     "postgres": "^3.4",
-    "qrcode": "^1.5.4",
     "react": "^19",
     "react-dom": "^19",
     "recharts": "^2.15",
@@ -36,7 +34,6 @@
     "@eslint/eslintrc": "^3.0",
     "@tailwindcss/postcss": "^4.0",
     "@types/node": "^22",
-    "@types/qrcode": "^1.5.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "drizzle-kit": "^0.30",
