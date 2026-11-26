@@ -28,9 +28,15 @@ const nextConfig: NextConfig = {
         headers: securityHeaders,
       },
       {
-        source: "/auth/:path*",
+        source: "/auth/finish",
         headers: [
           { key: "Referrer-Policy", value: "no-referrer" },
+          { key: "Cache-Control", value: "private, no-store" },
+        ],
+      },
+      {
+        source: "/auth/:path*",
+        headers: [
           { key: "Cache-Control", value: "private, no-store" },
         ],
       },

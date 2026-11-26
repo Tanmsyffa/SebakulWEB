@@ -23,10 +23,13 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/icons/icon-192x192.png?v=3", sizes: "192x192", type: "image/png" },
+      { url: "/icons/favicon-32x32.png?v=4", sizes: "32x32", type: "image/png" },
+      { url: "/icons/favicon-48x48.png?v=4", sizes: "48x48", type: "image/png" },
+      { url: "/icons/icon-192x192.png?v=4", sizes: "192x192", type: "image/png" },
+      { url: "/favicon.ico?v=4", sizes: "any" },
     ],
-    apple: [{ url: "/apple-touch-icon.png?v=3", sizes: "180x180", type: "image/png" }],
+    shortcut: [{ url: "/favicon.ico?v=4", sizes: "any" }],
+    apple: [{ url: "/apple-touch-icon.png?v=4", sizes: "180x180", type: "image/png" }],
   },
 };
 

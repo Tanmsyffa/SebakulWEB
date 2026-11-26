@@ -28,7 +28,10 @@ declare global {
 }
 
 export function getTurnstileSiteKey(): string {
-  return (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '').trim();
+  return (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '')
+    .trim()
+    .replace(/^['"]+|['"]+$/g, '')
+    .trim();
 }
 
 export function isTurnstileEnabled(): boolean {
