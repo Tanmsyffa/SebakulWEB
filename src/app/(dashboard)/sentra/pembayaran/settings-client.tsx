@@ -28,26 +28,14 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { formatActionError } from '@/lib/utils';
 import { saveSentraPaymentSettings } from './actions';
 
 const ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
 const MAX_QRIS_BYTES = 2 * 1024 * 1024;
 
 function extractErrorMessage(cause: unknown, fallback: string): string {
-  if (!(cause instanceof Error)) return fallback;
-  const raw = cause.message?.trim();
-  if (!raw) return fallback;
-  if (raw.startsWith('[')) {
-    try {
-      const parsed = JSON.parse(raw) as { message?: string }[];
-      if (Array.isArray(parsed) && parsed[0]?.message) {
-        return parsed[0].message;
-      }
-    } catch {
-      return fallback;
-    }
-  }
-  return raw;
+  return formatActionError(cause, fallback);
 }
 
 export function SentraPaymentSettingsClient({

@@ -45,6 +45,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { formatActionError } from '@/lib/utils';
 import { formatRupiah } from '@/lib/utils/currency';
 import { generateInvoiceNoticeWAUrl } from '@/lib/utils/whatsapp';
 import {
@@ -313,7 +314,7 @@ export function TagihanClient({
     } catch (error) {
       setFeedback({
         variant: 'danger',
-        text: error instanceof Error ? error.message : 'Gagal memproses perpanjangan sewa.',
+        text: formatActionError(error, 'Gagal memproses perpanjangan sewa.'),
       });
     } finally {
       setReviewingId(null);
@@ -371,9 +372,7 @@ export function TagihanClient({
       });
       router.refresh();
     } catch (err) {
-      setPayError(
-        err instanceof Error ? err.message : 'Gagal mencatat pembayaran.'
-      );
+      setPayError(formatActionError(err, 'Gagal mencatat pembayaran.'));
     } finally {
       setPaying(false);
     }
@@ -398,9 +397,7 @@ export function TagihanClient({
       setProofReviewNote('');
       router.refresh();
     } catch (error) {
-      setRejectError(
-        error instanceof Error ? error.message : 'Gagal menolak bukti bayar.'
-      );
+      setRejectError(formatActionError(error, 'Gagal menolak bukti bayar.'));
     } finally {
       setPaying(false);
     }
@@ -441,9 +438,7 @@ export function TagihanClient({
         setBatchError(res.message ?? 'Gagal membuat tagihan.');
       }
     } catch (err) {
-      setBatchError(
-        err instanceof Error ? err.message : 'Gagal membuat tagihan periode ini.'
-      );
+      setBatchError(formatActionError(err, 'Gagal membuat tagihan periode ini.'));
     } finally {
       setGenerating(false);
     }

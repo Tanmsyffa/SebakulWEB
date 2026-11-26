@@ -24,7 +24,7 @@ import {
 } from '@/server/actions/warung.actions';
 import { formatRupiah } from '@/lib/utils/currency';
 import { formatDateWIB } from '@/lib/utils/date';
-import { cn } from '@/lib/utils';
+import { cn, formatActionError } from '@/lib/utils';
 import { PageHeader, Section, StatCard } from '@/components/layout';
 import { AnimatedNumber, FadeIn, PageTransition, Stagger, StaggerItem } from '@/components/motion';
 import { Alert } from '@/components/ui/alert';
@@ -227,7 +227,7 @@ export function StokClient({
       setSuccessMsg(`Opname stok untuk ${pendingEdits.length} bahan berhasil disimpan.`);
       router.refresh();
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : 'Gagal menyimpan opname stok.');
+      setErrorMsg(formatActionError(err, 'Gagal menyimpan opname stok.'));
     } finally {
       setSaving(false);
     }
@@ -259,7 +259,7 @@ export function StokClient({
       setSuccessMsg('Bahan baku baru berhasil ditambahkan.');
       router.refresh();
     } catch (err) {
-      setAddError(err instanceof Error ? err.message : 'Gagal menambahkan bahan baku.');
+      setAddError(formatActionError(err, 'Gagal menambahkan bahan baku.'));
     } finally {
       setIsAdding(false);
     }
@@ -292,7 +292,7 @@ export function StokClient({
       setSuccessMsg(`Pemasok "${result.supplier.name}" ditambahkan.`);
       router.refresh();
     } catch (cause) {
-      setSupplierError(cause instanceof Error ? cause.message : 'Gagal menyimpan pemasok.');
+      setSupplierError(formatActionError(cause, 'Gagal menyimpan pemasok.'));
     } finally {
       setPurchaseBusy(false);
     }
@@ -310,7 +310,7 @@ export function StokClient({
       setSuccessMsg('Pemasok dihapus dari daftar aktif. Riwayat pembelian tetap tersimpan.');
       router.refresh();
     } catch (cause) {
-      setDeleteError(cause instanceof Error ? cause.message : 'Gagal menghapus pemasok.');
+      setDeleteError(formatActionError(cause, 'Gagal menghapus pemasok.'));
     } finally {
       setDeletingSupplier(false);
     }
@@ -361,7 +361,7 @@ export function StokClient({
       setSuccessMsg('Pembelian tersimpan, stok bertambah, dan tercatat di Buku kas.');
       router.refresh();
     } catch (cause) {
-      setPurchaseError(cause instanceof Error ? cause.message : 'Gagal mencatat pembelian.');
+      setPurchaseError(formatActionError(cause, 'Gagal mencatat pembelian.'));
     } finally {
       setPurchaseBusy(false);
     }

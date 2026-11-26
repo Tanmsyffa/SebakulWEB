@@ -54,6 +54,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { PDFExportOptions } from '@/lib/export/export-pdf';
+import { formatActionError } from '@/lib/utils';
 import { formatRupiah } from '@/lib/utils/currency';
 import { createSentraExpense } from '@/server/actions/lapak.actions';
 import type { SentraLedger } from '@/types';
@@ -168,9 +169,7 @@ export function KasSentraClient({
       setSuccessMsg('Pengeluaran sentra berhasil dicatat ke buku kas.');
       router.refresh();
     } catch (err) {
-      setDialogError(
-        err instanceof Error ? err.message : 'Gagal mencatat pengeluaran sentra.'
-      );
+      setDialogError(formatActionError(err, 'Gagal mencatat pengeluaran sentra.'));
     } finally {
       setLoading(false);
     }

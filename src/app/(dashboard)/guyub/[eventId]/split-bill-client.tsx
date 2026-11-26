@@ -43,6 +43,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { formatActionError } from '@/lib/utils';
 import { formatRupiah } from '@/lib/utils/currency';
 import { formatDateWIB } from '@/lib/utils/date';
 import type { SplitBillCalculationResult } from '@/lib/utils/split-bill';
@@ -181,7 +182,7 @@ export function SplitBillClient({
       setFeedback('Dana talangan berhasil dicatat.');
       router.refresh();
     } catch (err) {
-      setExpenseError(err instanceof Error ? err.message : 'Gagal mencatat dana talangan.');
+      setExpenseError(formatActionError(err, 'Gagal mencatat dana talangan.'));
     } finally {
       setLoading(false);
     }
@@ -200,9 +201,7 @@ export function SplitBillClient({
       setFeedback('Data peserta warung berhasil diperbarui.');
       router.refresh();
     } catch (error) {
-      setRegisterError(
-        error instanceof Error ? error.message : 'Gagal menyimpan pendaftaran peserta.'
-      );
+      setRegisterError(formatActionError(error, 'Gagal menyimpan pendaftaran peserta.'));
     } finally {
       setLoading(false);
     }
@@ -236,7 +235,7 @@ export function SplitBillClient({
       setFeedback('Pembayaran iuran berhasil dicatat.');
       router.refresh();
     } catch (error) {
-      setSavingsError(error instanceof Error ? error.message : 'Gagal mencatat iuran.');
+      setSavingsError(formatActionError(error, 'Gagal mencatat iuran.'));
     } finally {
       setLoading(false);
     }

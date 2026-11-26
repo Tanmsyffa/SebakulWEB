@@ -30,6 +30,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
+import { formatActionError } from '@/lib/utils';
 import { formatRupiah } from '@/lib/utils/currency';
 import { createWarung, deleteWarung, updateWarung } from '@/server/actions/admin.actions';
 import { suggestSlug, type LapakItem, type WarungItem } from './types';
@@ -196,7 +197,7 @@ export function WarungManagement({
       setNewWarungLapakId('');
       onAfterMutation?.();
     } catch (cause) {
-      setCreateError(cause instanceof Error ? cause.message : 'Gagal membuat warung.');
+      setCreateError(formatActionError(cause, 'Gagal membuat warung.'));
     } finally {
       onBusyChange(false);
     }
@@ -261,7 +262,7 @@ export function WarungManagement({
       setEditingWarung(null);
       onAfterMutation?.();
     } catch (cause) {
-      setEditError(cause instanceof Error ? cause.message : 'Perubahan warung gagal disimpan.');
+      setEditError(formatActionError(cause, 'Perubahan warung gagal disimpan.'));
     } finally {
       onBusyChange(false);
     }
@@ -278,7 +279,7 @@ export function WarungManagement({
       setDeletingWarung(null);
       onAfterMutation?.();
     } catch (cause) {
-      setDeleteError(cause instanceof Error ? cause.message : 'Data warung gagal dihapus.');
+      setDeleteError(formatActionError(cause, 'Data warung gagal dihapus.'));
     } finally {
       onBusyChange(false);
     }

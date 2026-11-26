@@ -30,7 +30,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { formatDateWIB } from '@/lib/utils/date';
-import { cn } from '@/lib/utils';
+import { cn, formatActionError } from '@/lib/utils';
 import { createFacilityTicket, updateFacilityTicket } from '@/server/actions/lapak.actions';
 import { createSupportRequest, updateSupportRequest } from '@/server/actions/support.actions';
 import type { TicketStatus, UserRoleType } from '@/types';
@@ -96,19 +96,7 @@ function formatFileSize(bytes: number): string {
 }
 
 function formatReadableError(error: unknown, fallback: string): string {
-  if (!(error instanceof Error) || !error.message) return fallback;
-  const trimmed = error.message.trim();
-  if (trimmed.startsWith('[')) {
-    try {
-      const parsed = JSON.parse(trimmed) as Array<{ message?: string }>;
-      if (Array.isArray(parsed) && parsed[0]?.message) {
-        return parsed[0].message;
-      }
-    } catch {
-      return fallback;
-    }
-  }
-  return trimmed;
+  return formatActionError(error, fallback);
 }
 
 function SupportStatusBadge({ status }: { status: string }) {

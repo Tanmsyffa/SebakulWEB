@@ -35,7 +35,7 @@ import { Field } from '@/components/ui/field';
 import { Input, RupiahInput } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
-import { cn } from '@/lib/utils';
+import { cn, formatActionError } from '@/lib/utils';
 import { formatRupiah } from '@/lib/utils/currency';
 import {
   castVote,
@@ -151,9 +151,7 @@ export function GuyubClient({ events, canManage }: GuyubClientProps) {
       setFeedback('Acara Guyub berhasil dibuat.');
       router.refresh();
     } catch (error) {
-      setEventError(
-        error instanceof Error ? error.message : 'Gagal membuat acara baru.'
-      );
+      setEventError(formatActionError(error, 'Gagal membuat acara baru.'));
     } finally {
       setSaving(false);
     }
@@ -183,7 +181,7 @@ export function GuyubClient({ events, canManage }: GuyubClientProps) {
       setFeedback('Polling baru berhasil dibuka.');
       router.refresh();
     } catch (error) {
-      setPollError(error instanceof Error ? error.message : 'Gagal membuat polling.');
+      setPollError(formatActionError(error, 'Gagal membuat polling.'));
     } finally {
       setSaving(false);
     }
@@ -200,9 +198,7 @@ export function GuyubClient({ events, canManage }: GuyubClientProps) {
       setFeedback('Polling telah ditutup. Hasil suara kini bersifat final.');
       router.refresh();
     } catch (error) {
-      setClosePollError(
-        error instanceof Error ? error.message : 'Gagal menutup polling.'
-      );
+      setClosePollError(formatActionError(error, 'Gagal menutup polling.'));
     } finally {
       setSaving(false);
     }
@@ -220,7 +216,7 @@ export function GuyubClient({ events, canManage }: GuyubClientProps) {
       );
       router.refresh();
     } catch (err) {
-      setPageError(err instanceof Error ? err.message : 'Gagal memberikan suara.');
+      setPageError(formatActionError(err, 'Gagal memberikan suara.'));
     } finally {
       setVotingPollId(null);
     }

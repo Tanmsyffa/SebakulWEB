@@ -27,6 +27,7 @@ import {
 import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
+import { formatActionError } from '@/lib/utils';
 import { formatDateOnlyWIB } from '@/lib/utils/date';
 import { updateOwnContact } from '@/server/actions/profile.actions';
 import type { UserRoleType } from '@/types';
@@ -74,19 +75,7 @@ function validateIndonesianPhone(raw: string): string | null {
 }
 
 function formatReadableError(error: unknown, fallback: string): string {
-  if (!(error instanceof Error) || !error.message) return fallback;
-  const trimmed = error.message.trim();
-  if (trimmed.startsWith('[')) {
-    try {
-      const parsed = JSON.parse(trimmed) as Array<{ message?: string }>;
-      if (Array.isArray(parsed) && parsed[0]?.message) {
-        return parsed[0].message;
-      }
-    } catch {
-      return fallback;
-    }
-  }
-  return trimmed;
+  return formatActionError(error, fallback);
 }
 
 export function ContactSettingsClient({

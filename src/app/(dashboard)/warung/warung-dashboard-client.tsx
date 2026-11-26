@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { toggleWarungOpen } from '@/server/actions/warung.actions';
 import { formatRupiah } from '@/lib/utils/currency';
-import { cn } from '@/lib/utils';
+import { cn, formatActionError } from '@/lib/utils';
 import { CashflowLineChart } from '@/components/charts/cashflow-line-chart';
 import { PageHeader, StatCard } from '@/components/layout';
 import { AnimatedNumber, FadeIn, PageTransition, Stagger, StaggerItem } from '@/components/motion';
@@ -93,7 +93,7 @@ export function WarungDashboardClient({
     } catch (err) {
       setStatusFeedback({
         type: 'danger',
-        message: err instanceof Error ? err.message : 'Gagal memperbarui status buka warung.',
+        message: formatActionError(err, 'Gagal memperbarui status buka warung.'),
       });
     } finally {
       setToggling(false);

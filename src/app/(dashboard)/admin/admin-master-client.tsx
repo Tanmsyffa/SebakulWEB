@@ -28,6 +28,7 @@ import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { formatActionError } from '@/lib/utils';
 import { registerAccount, transferAccount } from '@/server/actions/admin.actions';
 import { AccountManagement } from './account-management';
 import { LapakManagement } from './lapak-management';
@@ -86,6 +87,7 @@ export function AdminMasterClient({
   const [transferWarungId, setTransferWarungId] = React.useState(warungs[0]?.id ?? '');
   const [oldEmail, setOldEmail] = React.useState('');
   const [newEmail, setNewEmail] = React.useState('');
+  const [newOwnerName, setNewOwnerName] = React.useState('');
   const [transferError, setTransferError] = React.useState('');
 
   React.useEffect(() => {
@@ -128,11 +130,23 @@ export function AdminMasterClient({
     setRegisterOpen(true);
   }
 
+  function findWarungOwnerEmail(targetWarungId: string) {
+    const owner = visibleAccounts.find(
+      (account) =>
+        account.role === 'TENANT_MEMBER' &&
+        account.warungId === targetWarungId &&
+        !account.email.endsWith('@deleted.sebakul.invalid')
+    );
+    return owner?.email ?? '';
+  }
+
   function openTransferDialog() {
     setTransferError('');
-    setTransferWarungId((current) => current || visibleWarungs[0]?.id || '');
-    setOldEmail('');
+    const initialWarungId = transferWarungId || visibleWarungs[0]?.id || '';
+    setTransferWarungId(initialWarungId);
+    setOldEmail(findWarungOwnerEmail(initialWarungId));
     setNewEmail('');
+    setNewOwnerName('');
     setTransferOpen(true);
   }
 
@@ -147,6 +161,10 @@ export function AdminMasterClient({
         role,
         warungId: role === 'TENANT_MEMBER' ? warungId : null,
       });
+      if (!result.success) {
+        setRegisterError(result.error);
+        return;
+      }
       setVisibleAccounts((current) =>
         current.some(
           (account) =>
@@ -167,9 +185,7 @@ export function AdminMasterClient({
       setRegisterOpen(false);
       router.refresh();
     } catch (cause) {
-      setRegisterError(
-        cause instanceof Error ? cause.message : 'Gagal mendaftarkan akun.'
-      );
+      setRegisterError(formatActionError(cause, 'Gagal mendaftarkan akun.'));
     } finally {
       setBusy(false);
     }
@@ -184,44 +200,47 @@ export function AdminMasterClient({
         warungId: transferWarungId,
         oldEmail,
         newEmail,
+        newFullName: newOwnerName.trim() || undefined,
       });
+      if (!result.success) {
+        setTransferError(result.error);
+        return;
+      }
       setVisibleAccounts((current) => {
-        const replacement = current.find((account) => account.id === result.newUserId);
-        return [
-          ...current.filter(
-            (account) =>
-              !(
-                account.id === result.oldUserId &&
-                account.role === 'TENANT_MEMBER' &&
-                account.warungId === result.warungId
-              )
-          ),
-          ...(replacement &&
-          !current.some(
-            (account) =>
-              account.id === result.newUserId &&
+        const filtered = current.filter(
+          (account) =>
+            !(
+              account.id === result.oldUserId &&
               account.role === 'TENANT_MEMBER' &&
               account.warungId === result.warungId
-          )
-            ? [
-                {
-                  ...replacement,
-                  role: 'TENANT_MEMBER' as const,
-                  warungId: result.warungId,
-                },
-              ]
-            : []),
-        ];
+            )
+        );
+        const alreadyPresent = filtered.some(
+          (account) =>
+            account.id === result.newUserId &&
+            account.role === 'TENANT_MEMBER' &&
+            account.warungId === result.warungId
+        );
+        return alreadyPresent ? filtered : [...filtered, result.createdAccount];
       });
-      showSuccess('Kepemilikan warung berhasil dipindahkan.');
+      if (result.temporaryPassword) {
+        showCredential({
+          email: result.createdAccount.email,
+          password: result.temporaryPassword,
+        });
+        showSuccess(
+          'Kepemilikan warung berhasil dipindahkan dan akun baru telah dibuat. Salin kata sandi sementara di atas.'
+        );
+      } else {
+        showSuccess('Kepemilikan warung berhasil dipindahkan.');
+      }
       setOldEmail('');
       setNewEmail('');
+      setNewOwnerName('');
       setTransferOpen(false);
       router.refresh();
     } catch (cause) {
-      setTransferError(
-        cause instanceof Error ? cause.message : 'Gagal memindahkan kepemilikan warung.'
-      );
+      setTransferError(formatActionError(cause, 'Gagal memindahkan kepemilikan warung.'));
     } finally {
       setBusy(false);
     }
@@ -515,8 +534,8 @@ export function AdminMasterClient({
           <DialogHeader>
             <DialogTitle>Transfer kepemilikan warung</DialogTitle>
             <DialogDescription>
-              Daftarkan email pemilik pengganti sebagai akun terlebih dahulu sebelum memindahkan
-              kepemilikan warung.
+              Pindahkan akses warung ke email pemilik baru. Jika email belum terdaftar, sistem
+              otomatis membuatkan akun beserta kata sandi sementara.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleTransfer} className="space-y-4">
@@ -526,7 +545,11 @@ export function AdminMasterClient({
                 id="transfer-warung"
                 required
                 value={transferWarungId}
-                onChange={(event) => setTransferWarungId(event.target.value)}
+                onChange={(event) => {
+                  const nextId = event.target.value;
+                  setTransferWarungId(nextId);
+                  setOldEmail(findWarungOwnerEmail(nextId));
+                }}
               >
                 {visibleWarungs.map((warung) => (
                   <option key={warung.id} value={warung.id}>
@@ -553,6 +576,19 @@ export function AdminMasterClient({
                 value={newEmail}
                 onChange={(event) => setNewEmail(event.target.value)}
                 placeholder="pemilik.baru@contoh.id"
+              />
+            </Field>
+            <Field
+              label="Nama pemilik baru (opsional)"
+              htmlFor="new-owner-name"
+              hint="Digunakan apabila email pemilik baru belum memiliki akun di SEBAKUL."
+            >
+              <Input
+                id="new-owner-name"
+                maxLength={100}
+                value={newOwnerName}
+                onChange={(event) => setNewOwnerName(event.target.value)}
+                placeholder="Contoh: Sultan"
               />
             </Field>
             <DialogFooter>

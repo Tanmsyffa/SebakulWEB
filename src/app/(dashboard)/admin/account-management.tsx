@@ -43,6 +43,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { formatActionError } from '@/lib/utils';
 import {
   deleteAccount,
   resetAccountPassword,
@@ -199,9 +200,7 @@ export function AccountManagement({
       setEditing(null);
       onAfterMutation?.();
     } catch (cause) {
-      setEditError(
-        cause instanceof Error ? cause.message : 'Perubahan akun gagal disimpan.'
-      );
+      setEditError(formatActionError(cause, 'Perubahan akun gagal disimpan.'));
     } finally {
       setBusy(false);
     }
@@ -225,7 +224,7 @@ export function AccountManagement({
       );
       setResetTarget(null);
     } catch (cause) {
-      setResetError(cause instanceof Error ? cause.message : 'Reset kata sandi gagal.');
+      setResetError(formatActionError(cause, 'Reset kata sandi gagal.'));
     } finally {
       setBusy(false);
     }
@@ -251,9 +250,7 @@ export function AccountManagement({
       setToggleTarget(null);
       onAfterMutation?.();
     } catch (cause) {
-      setToggleError(
-        cause instanceof Error ? cause.message : 'Status akun gagal diperbarui.'
-      );
+      setToggleError(formatActionError(cause, 'Status akun gagal diperbarui.'));
     } finally {
       setBusy(false);
     }
@@ -281,7 +278,7 @@ export function AccountManagement({
         setDeleting(null);
         notifySuccess(cause.message);
       } else {
-        setDeleteError(cause instanceof Error ? cause.message : 'Penghapusan akun gagal.');
+        setDeleteError(formatActionError(cause, 'Penghapusan akun gagal.'));
       }
     } finally {
       setBusy(false);

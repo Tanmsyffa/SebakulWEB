@@ -8,6 +8,7 @@ import { Alert } from '@/components/ui/alert';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Separator } from '@/components/ui/separator';
+import { formatActionError } from '@/lib/utils';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { completeFinishPassword } from './actions';
 import { AuthCenteredLayout } from '../../_components/auth-shell';
@@ -136,11 +137,7 @@ export function FinishAccountClient() {
       router.replace('/login?status=password_reset');
       router.refresh();
     } catch (cause) {
-      setMessage(
-        cause instanceof Error && cause.message
-          ? cause.message
-          : 'Terjadi kendala koneksi. Coba lagi beberapa saat.'
-      );
+      setMessage(formatActionError(cause, 'Terjadi kendala koneksi. Coba lagi beberapa saat.'));
       setLoading(false);
     }
   }

@@ -28,7 +28,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { cn } from '@/lib/utils';
+import { cn, formatActionError } from '@/lib/utils';
 import { formatRupiah } from '@/lib/utils/currency';
 import { updateLapakStatus } from '@/server/actions/lapak.actions';
 import type { BillingCycle, InvoiceStatus, LapakStatus } from '@/types';
@@ -175,9 +175,7 @@ export function SentraPetaClient({ initialLapaks }: { initialLapaks: LapakItem[]
       });
       router.refresh();
     } catch (err) {
-      setDialogError(
-        err instanceof Error ? err.message : 'Gagal mengubah status lapak.'
-      );
+      setDialogError(formatActionError(err, 'Gagal mengubah status lapak.'));
     } finally {
       setUpdating(false);
     }

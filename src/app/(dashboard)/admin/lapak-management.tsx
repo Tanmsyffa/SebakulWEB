@@ -40,6 +40,7 @@ import {
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { getBusinessDateString } from '@/lib/business-date';
+import { formatActionError } from '@/lib/utils';
 import { formatRupiah } from '@/lib/utils/currency';
 import {
   createLapak,
@@ -226,7 +227,7 @@ export function LapakManagement({
       setNewBillingCycle('BULANAN');
       onAfterMutation?.();
     } catch (cause) {
-      setCreateError(cause instanceof Error ? cause.message : 'Gagal membuat lapak.');
+      setCreateError(formatActionError(cause, 'Gagal membuat lapak.'));
     } finally {
       onBusyChange(false);
     }
@@ -298,7 +299,7 @@ export function LapakManagement({
       setEditingLapak(null);
       onAfterMutation?.();
     } catch (cause) {
-      setEditError(cause instanceof Error ? cause.message : 'Perubahan lapak gagal disimpan.');
+      setEditError(formatActionError(cause, 'Perubahan lapak gagal disimpan.'));
     } finally {
       onBusyChange(false);
     }
@@ -343,7 +344,7 @@ export function LapakManagement({
       setContractLapak(null);
       onAfterMutation?.();
     } catch (cause) {
-      setContractError(cause instanceof Error ? cause.message : 'Detail kontrak gagal disimpan.');
+      setContractError(formatActionError(cause, 'Detail kontrak gagal disimpan.'));
     } finally {
       onBusyChange(false);
     }
@@ -360,7 +361,7 @@ export function LapakManagement({
       setDeletingLapak(null);
       onAfterMutation?.();
     } catch (cause) {
-      setDeleteError(cause instanceof Error ? cause.message : 'Data lapak gagal dihapus.');
+      setDeleteError(formatActionError(cause, 'Data lapak gagal dihapus.'));
     } finally {
       onBusyChange(false);
     }

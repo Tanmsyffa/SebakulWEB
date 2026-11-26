@@ -4,7 +4,7 @@ import * as React from 'react';
 import { ArrowDownRight, ArrowUpRight, FileSpreadsheet, Wallet } from 'lucide-react';
 import { getWarungPeriodReport } from '@/server/actions/warung.actions';
 import { formatRupiah } from '@/lib/utils/currency';
-import { cn } from '@/lib/utils';
+import { cn, formatActionError } from '@/lib/utils';
 import { FilterBar, PageHeader, Section, StatCard } from '@/components/layout';
 import { AnimatedNumber, FadeIn, PageTransition, Stagger, StaggerItem } from '@/components/motion';
 import { ExportCSVButton, ExportPDFButton } from '@/components/reports/export-buttons';
@@ -82,7 +82,7 @@ export function WarungReportClient({ initialReport }: { initialReport: Report })
     try {
       setReport(await getWarungPeriodReport({ startDate, endDate }));
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Laporan gagal dimuat.');
+      setError(formatActionError(cause, 'Laporan gagal dimuat.'));
     } finally {
       setBusy(false);
     }

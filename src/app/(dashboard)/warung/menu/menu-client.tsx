@@ -21,7 +21,7 @@ import {
   updateMenuSortOrder,
 } from '@/server/actions/warung.actions';
 import { formatRupiah } from '@/lib/utils/currency';
-import { cn } from '@/lib/utils';
+import { cn, formatActionError } from '@/lib/utils';
 import { FilterBar, PageHeader, Section, StatCard } from '@/components/layout';
 import { AnimatedNumber, FadeIn, PageTransition, Stagger, StaggerItem } from '@/components/motion';
 import { Alert } from '@/components/ui/alert';
@@ -219,7 +219,7 @@ export function MenuClient({ initialMenus, inventory, initialRecipes }: MenuClie
       setSuccessMsg('Menu baru berhasil ditambahkan.');
       router.refresh();
     } catch (err) {
-      setCreateError(err instanceof Error ? err.message : 'Gagal menambahkan menu.');
+      setCreateError(formatActionError(err, 'Gagal menambahkan menu.'));
     } finally {
       setLoading(false);
     }
@@ -265,7 +265,7 @@ export function MenuClient({ initialMenus, inventory, initialRecipes }: MenuClie
       setSuccessMsg('Perubahan menu tersimpan.');
       router.refresh();
     } catch (err) {
-      setEditError(err instanceof Error ? err.message : 'Gagal menyimpan perubahan menu.');
+      setEditError(formatActionError(err, 'Gagal menyimpan perubahan menu.'));
     } finally {
       setEditBusy(false);
     }
@@ -283,7 +283,7 @@ export function MenuClient({ initialMenus, inventory, initialRecipes }: MenuClie
       );
       router.refresh();
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : 'Gagal mengubah status ketersediaan.');
+      setErrorMsg(formatActionError(err, 'Gagal mengubah status ketersediaan.'));
     } finally {
       setBusyMenuId(null);
     }
@@ -313,7 +313,7 @@ export function MenuClient({ initialMenus, inventory, initialRecipes }: MenuClie
       setSuccessMsg('Foto menu berhasil diperbarui.');
       router.refresh();
     } catch (error) {
-      setErrorMsg(error instanceof Error ? error.message : 'Gagal mengganti foto menu.');
+      setErrorMsg(formatActionError(error, 'Gagal mengganti foto menu.'));
     } finally {
       setBusyMenuId(null);
     }
@@ -340,7 +340,7 @@ export function MenuClient({ initialMenus, inventory, initialRecipes }: MenuClie
       router.refresh();
     } catch (err) {
       setMenus(previousMenus);
-      setErrorMsg(err instanceof Error ? err.message : 'Gagal menyimpan urutan menu.');
+      setErrorMsg(formatActionError(err, 'Gagal menyimpan urutan menu.'));
     } finally {
       setReordering(false);
     }
@@ -374,7 +374,7 @@ export function MenuClient({ initialMenus, inventory, initialRecipes }: MenuClie
       setRecipeMenuId(null);
       router.refresh();
     } catch (cause) {
-      setRecipeError(cause instanceof Error ? cause.message : 'Gagal menyimpan resep.');
+      setRecipeError(formatActionError(cause, 'Gagal menyimpan resep.'));
     } finally {
       setRecipeBusy(false);
     }

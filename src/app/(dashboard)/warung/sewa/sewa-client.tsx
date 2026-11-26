@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { requestLapakRenewal } from '@/server/actions/lapak.actions';
 import { addDaysToDateString } from '@/lib/business-date';
+import { formatActionError } from '@/lib/utils';
 import { formatRupiah } from '@/lib/utils/currency';
 import { PageHeader, Section, StatCard } from '@/components/layout';
 import { AnimatedNumber, FadeIn, PageTransition, Stagger, StaggerItem } from '@/components/motion';
@@ -215,7 +216,7 @@ export function SewaClient({
       setSuccessMsg('Bukti pembayaran berhasil dikirim. Menunggu verifikasi pengelola.');
       router.refresh();
     } catch (err) {
-      setUploadError(err instanceof Error ? err.message : 'Gagal mengirim bukti bayar.');
+      setUploadError(formatActionError(err, 'Gagal mengirim bukti bayar.'));
     } finally {
       setUploading(false);
     }
@@ -255,9 +256,7 @@ export function SewaClient({
       setSuccessMsg('Permintaan perpanjangan sewa telah dikirim ke pengelola.');
       router.refresh();
     } catch (error) {
-      setRenewalError(
-        error instanceof Error ? error.message : 'Gagal mengirim permintaan perpanjangan.'
-      );
+      setRenewalError(formatActionError(error, 'Gagal mengirim permintaan perpanjangan.'));
     } finally {
       setRenewalBusy(false);
     }

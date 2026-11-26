@@ -6,7 +6,7 @@ import { ArrowDownRight, ArrowUpRight, Wallet } from 'lucide-react';
 import { createWarungTransaction } from '@/server/actions/warung.actions';
 import { formatRupiah } from '@/lib/utils/currency';
 import { formatDateWIB } from '@/lib/utils/date';
-import { cn } from '@/lib/utils';
+import { cn, formatActionError } from '@/lib/utils';
 import { PageHeader, Section, StatCard } from '@/components/layout';
 import { AnimatedNumber, FadeIn, PageTransition, Stagger, StaggerItem } from '@/components/motion';
 import { ExportCSVButton, ExportPDFButton } from '@/components/reports/export-buttons';
@@ -113,7 +113,7 @@ export function KasClient({ initialTransactions, warungName, focusCreate = false
       setSuccessMsg('Transaksi berhasil dicatat ke buku kas.');
       router.refresh();
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : 'Gagal menyimpan transaksi.');
+      setErrorMsg(formatActionError(err, 'Gagal menyimpan transaksi.'));
     } finally {
       setLoading(false);
     }

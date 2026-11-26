@@ -39,6 +39,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { formatActionError } from '@/lib/utils';
 import { formatRupiah } from '@/lib/utils/currency';
 import { formatDateWIB } from '@/lib/utils/date';
 import { getAuditLogs } from '@/server/actions/admin.actions';
@@ -300,9 +301,7 @@ export function AuditLogClient({ initialLogs }: { initialLogs: AuditItem[] }) {
       });
       setHasMore(older.length >= 50);
     } catch (cause) {
-      setLoadError(
-        cause instanceof Error ? cause.message : 'Gagal memuat riwayat audit berikutnya.'
-      );
+      setLoadError(formatActionError(cause, 'Gagal memuat riwayat audit berikutnya.'));
     } finally {
       setLoadingMore(false);
     }

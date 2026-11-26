@@ -343,37 +343,76 @@ const registerAccountSchema = z.object({
 
 export async function registerAccount(input: z.input<typeof registerAccountSchema>) {
   const { user } = await requireSuperAdmin();
-  const data = registerAccountSchema.parse(input);
-  const existing = await db.select({ id: users.id }).from(users).where(eq(users.email, data.email)).limit(1);
-  if (existing.length) throw new Error('Email sudah terdaftar');
-  if (data.role === 'TENANT_MEMBER') {
-    const found = await db.select({ id: warungs.id }).from(warungs).where(eq(warungs.id, data.warungId!)).limit(1);
-    if (!found.length) throw new Error('Warung tidak ditemukan');
+  const parsed = registerAccountSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      success: false as const,
+      error: parsed.error.issues[0]?.message || 'Periksa kembali isian pendaftaran akun.',
+    };
   }
-  const supabase = createAdminClient();
-  const temporaryPassword = `${randomBytes(24).toString('base64url')}!aA1`;
-  const { data: created, error } = await supabase.auth.admin.createUser({
-    email: data.email,
-    password: temporaryPassword,
-    email_confirm: true,
-    user_metadata: { full_name: data.fullName },
-    app_metadata: { must_change_password: true },
-  });
-  if (error || !created.user) throw new Error('Gagal membuat akun. Periksa apakah email sudah digunakan.');
-  let roleId: string;
+  const data = parsed.data;
+
   try {
-    roleId = await db.transaction(async tx => {
-      await tx.insert(users).values({ id: created.user.id, email: data.email, fullName: data.fullName });
-      const [createdRole] = await tx.insert(userRoles).values({ userId: created.user.id, role: data.role, warungId: data.role === 'TENANT_MEMBER' ? data.warungId : null }).returning({ id: userRoles.id });
-      await tx.insert(auditLogs).values({ actorId: user.id, action: 'REGISTER_ACCOUNT', entityType: 'users', entityId: created.user.id, newValue: JSON.stringify({ email: data.email, role: data.role, warungId: data.warungId }) });
-      return createdRole.id;
+    const existing = await db.select({ id: users.id }).from(users).where(eq(users.email, data.email)).limit(1);
+    if (existing.length) {
+      return { success: false as const, error: 'Email tersebut sudah terdaftar pada sistem.' };
+    }
+    if (data.role === 'TENANT_MEMBER') {
+      const found = await db.select({ id: warungs.id }).from(warungs).where(eq(warungs.id, data.warungId!)).limit(1);
+      if (!found.length) {
+        return { success: false as const, error: 'Data warung tujuan tidak ditemukan.' };
+      }
+    }
+    const supabase = createAdminClient();
+    const temporaryPassword = `${randomBytes(24).toString('base64url')}!aA1`;
+    const { data: created, error } = await supabase.auth.admin.createUser({
+      email: data.email,
+      password: temporaryPassword,
+      email_confirm: true,
+      user_metadata: { full_name: data.fullName },
+      app_metadata: { must_change_password: true },
     });
-  } catch (cause) {
-    await supabase.auth.admin.deleteUser(created.user.id);
-    throw cause;
+    if (error || !created.user) {
+      console.error('[admin:registerAccount] Auth createUser failed', { email: data.email, error: error?.message });
+      return {
+        success: false as const,
+        error: 'Gagal membuat akun. Periksa apakah email sudah pernah digunakan.',
+      };
+    }
+    let roleId: string;
+    try {
+      roleId = await db.transaction(async tx => {
+        await tx.insert(users).values({ id: created.user.id, email: data.email, fullName: data.fullName });
+        const [createdRole] = await tx.insert(userRoles).values({ userId: created.user.id, role: data.role, warungId: data.role === 'TENANT_MEMBER' ? data.warungId : null }).returning({ id: userRoles.id });
+        await tx.insert(auditLogs).values({ actorId: user.id, action: 'REGISTER_ACCOUNT', entityType: 'users', entityId: created.user.id, newValue: JSON.stringify({ email: data.email, role: data.role, warungId: data.warungId }) });
+        return createdRole.id;
+      });
+    } catch (cause) {
+      await supabase.auth.admin.deleteUser(created.user.id);
+      throw cause;
+    }
+    revalidatePath('/admin');
+    return {
+      success: true as const,
+      temporaryPassword,
+      account: {
+        id: created.user.id,
+        roleId,
+        email: data.email,
+        fullName: data.fullName,
+        phoneNumber: null,
+        isActive: true,
+        role: data.role,
+        warungId: data.role === 'TENANT_MEMBER' ? data.warungId : null,
+      },
+    };
+  } catch (err) {
+    console.error('[admin:registerAccount] Unexpected error', err);
+    return {
+      success: false as const,
+      error: 'Pendaftaran akun belum berhasil diproses. Silakan coba lagi.',
+    };
   }
-  revalidatePath('/admin');
-  return { success: true, temporaryPassword, account: { id: created.user.id, roleId, email: data.email, fullName: data.fullName, phoneNumber: null, isActive: true, role: data.role, warungId: data.role === 'TENANT_MEMBER' ? data.warungId : null } };
 }
 
 // ─── 2. TRANSFER WARUNG OWNERSHIP ────────────────────────────
@@ -382,83 +421,329 @@ export async function transferAccount(input: {
   warungId: string;
   oldEmail: string;
   newEmail: string;
+  newFullName?: string;
 }) {
   const { user } = await requireSuperAdmin();
 
-  const transferData = z.object({
-    warungId: z.string().uuid(),
-    oldEmail: z.string().email().transform(value => value.trim().toLowerCase()),
-    newEmail: z.string().email().transform(value => value.trim().toLowerCase()),
-  }).parse(input);
-  if (transferData.oldEmail === transferData.newEmail) throw new Error('Email lama dan baru harus berbeda');
+  const parsed = z
+    .object({
+      warungId: z.string().uuid(),
+      oldEmail: z.string().email('Email pemilik lama tidak valid.').transform(value => value.trim().toLowerCase()),
+      newEmail: z.string().email('Email pemilik baru tidak valid.').transform(value => value.trim().toLowerCase()),
+      newFullName: z.string().trim().max(100).optional(),
+    })
+    .safeParse(input);
 
-  const result = await db.transaction(async (tx) => {
-    // 1. Find old user
-    const [oldUser] = await tx
-      .select()
-      .from(users)
-      .where(eq(users.email, transferData.oldEmail))
-      .for('update')
-      .limit(1);
+  if (!parsed.success) {
+    return {
+      success: false as const,
+      error: parsed.error.issues[0]?.message || 'Periksa kembali email pemilik lama dan baru.',
+    };
+  }
 
-    if (!oldUser) {
-      throw new Error(`Pengguna dengan email ${transferData.oldEmail} tidak ditemukan`);
-    }
+  const transferData = parsed.data;
+  if (transferData.oldEmail === transferData.newEmail) {
+    return { success: false as const, error: 'Email pemilik lama dan baru harus berbeda.' };
+  }
 
-    // The replacement must already be a real Auth account registered by Super Admin.
-    const [newUser] = await tx
+  try {
+    const [existingTargetUser] = await db
       .select()
       .from(users)
       .where(eq(users.email, transferData.newEmail))
-      .for('update')
       .limit(1);
 
-    if (!newUser) throw new Error('Daftarkan email pengganti terlebih dahulu');
-    if (!newUser.isActive || newUser.email.endsWith('@deleted.sebakul.invalid')) {
-      throw new Error('Akun pengganti sedang nonaktif.');
-    }
-    const oldRole = await tx.select({ id: userRoles.id }).from(userRoles)
-      .where(and(eq(userRoles.userId, oldUser.id), eq(userRoles.warungId, transferData.warungId), eq(userRoles.role, 'TENANT_MEMBER'))).limit(1);
-    if (!oldRole.length) throw new Error('Pemilik lama tidak terhubung ke warung tersebut');
-    const otherWarung = await tx.select({ id: userRoles.id }).from(userRoles)
-      .where(and(eq(userRoles.userId, newUser.id), eq(userRoles.role, 'TENANT_MEMBER'))).limit(1);
-    if (otherWarung.length) throw new Error('Email pengganti sudah memiliki warung');
+    // Case A: Replacement email already exists in public.users
+    if (existingTargetUser) {
+      if (!existingTargetUser.isActive || existingTargetUser.email.endsWith('@deleted.sebakul.invalid')) {
+        return { success: false as const, error: 'Akun email pengganti sedang nonaktif.' };
+      }
 
-    // 3. Delete old role
-    await tx
-      .delete(userRoles)
-      .where(
+      const txOutcome = await db.transaction(async tx => {
+        const [oldUser] = await tx
+          .select()
+          .from(users)
+          .where(eq(users.email, transferData.oldEmail))
+          .for('update')
+          .limit(1);
+
+        if (!oldUser) {
+          return { ok: false as const, error: `Akun pemilik lama (${transferData.oldEmail}) tidak ditemukan.` };
+        }
+
+        const [newUser] = await tx
+          .select()
+          .from(users)
+          .where(eq(users.id, existingTargetUser.id))
+          .for('update')
+          .limit(1);
+
+        if (!newUser || !newUser.isActive) {
+          return { ok: false as const, error: 'Akun email pengganti tidak aktif.' };
+        }
+
+        const oldRole = await tx
+          .select({ id: userRoles.id })
+          .from(userRoles)
+          .where(
+            and(
+              eq(userRoles.userId, oldUser.id),
+              eq(userRoles.warungId, transferData.warungId),
+              eq(userRoles.role, 'TENANT_MEMBER')
+            )
+          )
+          .limit(1);
+
+        if (!oldRole.length) {
+          return { ok: false as const, error: 'Email pemilik lama tidak terhubung sebagai pemilik warung tersebut.' };
+        }
+
+        const otherWarung = await tx
+          .select({ id: userRoles.id })
+          .from(userRoles)
+          .where(
+            and(
+              eq(userRoles.userId, newUser.id),
+              eq(userRoles.role, 'TENANT_MEMBER'),
+              sql`${userRoles.warungId} <> ${transferData.warungId}`
+            )
+          )
+          .limit(1);
+
+        if (otherWarung.length) {
+          return { ok: false as const, error: 'Email pengganti sudah terdaftar sebagai pemilik warung lain.' };
+        }
+
+        await tx
+          .delete(userRoles)
+          .where(
+            and(
+              eq(userRoles.userId, oldUser.id),
+              eq(userRoles.warungId, transferData.warungId),
+              eq(userRoles.role, 'TENANT_MEMBER')
+            )
+          );
+
+        const [insertedRole] = await tx
+          .insert(userRoles)
+          .values({
+            userId: newUser.id,
+            role: 'TENANT_MEMBER',
+            warungId: transferData.warungId,
+          })
+          .onConflictDoNothing()
+          .returning({ id: userRoles.id });
+
+        let resolvedRoleId = insertedRole?.id;
+        if (!resolvedRoleId) {
+          const [existingRole] = await tx
+            .select({ id: userRoles.id })
+            .from(userRoles)
+            .where(
+              and(
+                eq(userRoles.userId, newUser.id),
+                eq(userRoles.role, 'TENANT_MEMBER'),
+                eq(userRoles.warungId, transferData.warungId)
+              )
+            )
+            .limit(1);
+          resolvedRoleId = existingRole?.id ?? '';
+        }
+
+        await tx.insert(auditLogs).values({
+          actorId: user.id,
+          action: 'TRANSFER_ACCOUNT',
+          entityType: 'warungs',
+          entityId: transferData.warungId,
+          oldValue: JSON.stringify({ email: transferData.oldEmail, userId: oldUser.id }),
+          newValue: JSON.stringify({ email: transferData.newEmail, userId: newUser.id }),
+        });
+
+        return {
+          ok: true as const,
+          oldUserId: oldUser.id,
+          newUserId: newUser.id,
+          roleId: resolvedRoleId,
+          newUser,
+        };
+      });
+
+      if (!txOutcome.ok) {
+        return { success: false as const, error: txOutcome.error };
+      }
+
+      revalidatePath('/admin');
+      revalidatePath('/warung');
+      revalidatePath('/sentra/tagihan');
+      return {
+        success: true as const,
+        oldUserId: txOutcome.oldUserId,
+        newUserId: txOutcome.newUserId,
+        warungId: transferData.warungId,
+        temporaryPassword: null as string | null,
+        createdAccount: {
+          id: txOutcome.newUser.id,
+          roleId: txOutcome.roleId,
+          email: txOutcome.newUser.email,
+          fullName: txOutcome.newUser.fullName,
+          phoneNumber: txOutcome.newUser.phoneNumber,
+          isActive: txOutcome.newUser.isActive,
+          role: 'TENANT_MEMBER' as const,
+          warungId: transferData.warungId,
+        },
+      };
+    }
+
+    // Case B: Replacement email is brand new -> validate old owner first, then provision Auth + transfer atomically
+    const [oldOwnerCheck] = await db
+      .select({ id: users.id })
+      .from(users)
+      .innerJoin(
+        userRoles,
         and(
-          eq(userRoles.userId, oldUser.id),
+          eq(userRoles.userId, users.id),
           eq(userRoles.warungId, transferData.warungId),
           eq(userRoles.role, 'TENANT_MEMBER')
         )
-      );
+      )
+      .where(eq(users.email, transferData.oldEmail))
+      .limit(1);
 
-    // 4. Insert new role
-    await tx.insert(userRoles).values({
-      userId: newUser.id,
-      role: 'TENANT_MEMBER',
-      warungId: transferData.warungId,
-    }).onConflictDoNothing();
+    if (!oldOwnerCheck) {
+      return {
+        success: false as const,
+        error: `Email pemilik lama (${transferData.oldEmail}) tidak terdaftar pada warung yang dipilih.`,
+      };
+    }
 
-    // 5. Audit log
-    await tx.insert(auditLogs).values({
-      actorId: user.id,
-      action: 'TRANSFER_ACCOUNT',
-      entityType: 'warungs',
-      entityId: transferData.warungId,
-      oldValue: JSON.stringify({ email: transferData.oldEmail, userId: oldUser.id }),
-      newValue: JSON.stringify({ email: transferData.newEmail, userId: newUser.id }),
+    const fallbackName = transferData.newEmail
+      .split('@')[0]
+      .replace(/[._-]+/g, ' ')
+      .replace(/\b\w/g, ch => ch.toUpperCase())
+      .trim();
+    const derivedFullName =
+      transferData.newFullName && transferData.newFullName.length >= 2
+        ? transferData.newFullName
+        : fallbackName.length >= 2
+        ? fallbackName
+        : 'Pemilik Warung';
+
+    const supabase = createAdminClient();
+    const temporaryPassword = `${randomBytes(24).toString('base64url')}!aA1`;
+    const { data: createdAuth, error: authErr } = await supabase.auth.admin.createUser({
+      email: transferData.newEmail,
+      password: temporaryPassword,
+      email_confirm: true,
+      user_metadata: { full_name: derivedFullName },
+      app_metadata: { must_change_password: true },
     });
 
-    return { oldUserId: oldUser.id, newUserId: newUser.id };
-  });
+    if (authErr || !createdAuth.user) {
+      console.error('[admin:transferAccount] Auth createUser failed', {
+        email: transferData.newEmail,
+        error: authErr?.message,
+      });
+      return {
+        success: false as const,
+        error: 'Gagal menyiapkan akun pemilik baru. Periksa kembali alamat email pengganti.',
+      };
+    }
 
-  revalidatePath('/admin');
-  revalidatePath('/warung');
-  revalidatePath('/sentra/tagihan');
-  return { success: true, ...result, warungId: transferData.warungId };
+    let createdRoleId = '';
+    try {
+      await db.transaction(async tx => {
+        const [oldUser] = await tx
+          .select({ id: users.id })
+          .from(users)
+          .where(eq(users.email, transferData.oldEmail))
+          .for('update')
+          .limit(1);
+
+        if (!oldUser) {
+          throw new Error('OLD_OWNER_MISSING');
+        }
+
+        await tx.insert(users).values({
+          id: createdAuth.user.id,
+          email: transferData.newEmail,
+          fullName: derivedFullName,
+        });
+
+        await tx
+          .delete(userRoles)
+          .where(
+            and(
+              eq(userRoles.userId, oldUser.id),
+              eq(userRoles.warungId, transferData.warungId),
+              eq(userRoles.role, 'TENANT_MEMBER')
+            )
+          );
+
+        const [newRole] = await tx
+          .insert(userRoles)
+          .values({
+            userId: createdAuth.user.id,
+            role: 'TENANT_MEMBER',
+            warungId: transferData.warungId,
+          })
+          .returning({ id: userRoles.id });
+
+        createdRoleId = newRole.id;
+
+        await tx.insert(auditLogs).values([
+          {
+            actorId: user.id,
+            action: 'REGISTER_ACCOUNT',
+            entityType: 'users',
+            entityId: createdAuth.user.id,
+            newValue: JSON.stringify({
+              email: transferData.newEmail,
+              role: 'TENANT_MEMBER',
+              warungId: transferData.warungId,
+            }),
+          },
+          {
+            actorId: user.id,
+            action: 'TRANSFER_ACCOUNT',
+            entityType: 'warungs',
+            entityId: transferData.warungId,
+            oldValue: JSON.stringify({ email: transferData.oldEmail, userId: oldUser.id }),
+            newValue: JSON.stringify({ email: transferData.newEmail, userId: createdAuth.user.id }),
+          },
+        ]);
+      });
+    } catch (txErr) {
+      await supabase.auth.admin.deleteUser(createdAuth.user.id);
+      throw txErr;
+    }
+
+    revalidatePath('/admin');
+    revalidatePath('/warung');
+    revalidatePath('/sentra/tagihan');
+    return {
+      success: true as const,
+      oldUserId: oldOwnerCheck.id,
+      newUserId: createdAuth.user.id,
+      warungId: transferData.warungId,
+      temporaryPassword,
+      createdAccount: {
+        id: createdAuth.user.id,
+        roleId: createdRoleId,
+        email: transferData.newEmail,
+        fullName: derivedFullName,
+        phoneNumber: null,
+        isActive: true,
+        role: 'TENANT_MEMBER' as const,
+        warungId: transferData.warungId,
+      },
+    };
+  } catch (err) {
+    console.error('[admin:transferAccount] Unexpected error', err);
+    return {
+      success: false as const,
+      error: 'Pemindahan kepemilikan warung belum dapat diproses. Silakan coba lagi.',
+    };
+  }
 }
 
 // ─── 3. AUDIT LOG (SUPER ADMIN ONLY) ─────────────────────────

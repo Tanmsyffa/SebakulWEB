@@ -8,6 +8,7 @@ import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Separator } from '@/components/ui/separator';
+import { formatActionError } from '@/lib/utils';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { changePassword } from '@/server/actions/account.actions';
 import { AuthCenteredLayout } from '../../_components/auth-shell';
@@ -71,11 +72,7 @@ export function ChangePasswordClient({
       router.replace('/login?status=password_changed');
       router.refresh();
     } catch (cause) {
-      setMessage(
-        cause instanceof Error && cause.message
-          ? cause.message
-          : 'Gagal mengubah kata sandi.'
-      );
+      setMessage(formatActionError(cause, 'Gagal mengubah kata sandi.'));
     } finally {
       setBusy(false);
     }
