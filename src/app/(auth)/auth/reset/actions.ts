@@ -16,17 +16,21 @@ const emailSchema = z
 const cooldownByEmail = new Map<string, number>();
 const COOLDOWN_MS = 45_000;
 
+function cleanEnv(raw: string | undefined): string {
+  return (raw ?? '').trim().replace(/^['"]+|['"]+$/g, '').trim();
+}
+
 function resolveSafeBaseUrl(): string {
-  const configured = (process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL)?.trim();
+  const configured = cleanEnv(process.env.NEXT_PUBLIC_SITE_URL) || cleanEnv(process.env.NEXT_PUBLIC_APP_URL);
   const isLocalhostUrl = configured ? /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/|$)/i.test(configured) : false;
   if (configured && !(process.env.VERCEL === '1' && isLocalhostUrl)) {
     return configured.replace(/\/+$/, '');
   }
-  const prodVercel = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
+  const prodVercel = cleanEnv(process.env.VERCEL_PROJECT_PRODUCTION_URL);
   if (prodVercel) {
     return `https://${prodVercel.replace(/^https?:\/\//, '').replace(/\/+$/, '')}`;
   }
-  const branchVercel = process.env.VERCEL_URL?.trim();
+  const branchVercel = cleanEnv(process.env.VERCEL_URL);
   if (branchVercel) {
     return `https://${branchVercel.replace(/^https?:\/\//, '').replace(/\/+$/, '')}`;
   }
@@ -63,7 +67,7 @@ export async function requestPasswordResetEmail(rawEmail: string): Promise<Reque
     return { status: 'error', message: 'Masukkan alamat email yang valid.' };
   }
 
-  const resendApiKey = process.env.RESEND_API_KEY?.trim();
+  const resendApiKey = cleanEnv(process.env.RESEND_API_KEY);
   if (!resendApiKey) {
     return { status: 'fallback_supabase' };
   }
@@ -106,7 +110,7 @@ export async function requestPasswordResetEmail(rawEmail: string): Promise<Reque
   }
 
   const finishUrl = `${baseUrl}/auth/finish?token_hash=${encodeURIComponent(hashedToken)}&type=recovery`;
-  const fromAddress = process.env.RESEND_FROM_EMAIL?.trim() || 'SEBAKUL <onboarding@resend.dev>';
+  const fromAddress = cleanEnv(process.env.RESEND_FROM_EMAIL) || 'SEBAKUL <noreply@sebakul.my.id>';
 
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
