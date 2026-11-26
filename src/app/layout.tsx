@@ -25,7 +25,7 @@ function resolveMetadataBase(): URL {
 
 const SHARE_TITLE = `${BRAND_NAME} - ${BRAND_FULL_NAME}`;
 const SHARE_DESCRIPTION = `${BRAND_JARGON} Buku kerja operasional untuk pengelola sentra kuliner dan pemilik warung.`;
-const OG_IMAGE_URL = '/images/og-sebakul.jpg?v=1';
+const OG_IMAGE_URL = '/images/og-sebakul.jpg?v=2';
 
 export const metadata: Metadata = {
   metadataBase: resolveMetadataBase(),

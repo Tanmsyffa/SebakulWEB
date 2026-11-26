@@ -1,4 +1,4 @@
-const CACHE = 'sebakul-static-v4';
+const CACHE = 'sebakul-static-v5';
 const SHELL = [
   '/offline.html',
   '/manifest.json',

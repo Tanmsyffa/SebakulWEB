@@ -344,8 +344,8 @@ export function LoginForm({
               <div className="overflow-hidden rounded-xl border border-border-subtle bg-surface">
                 <div className="relative aspect-[16/10] w-full bg-surface-muted">
                   <Image
-                    src="/images/landing-hero.jpg"
-                    alt="Sentra kuliner SEBAKUL dalam pencahayaan pagi"
+                    src="/images/gallery-kanopi.jpg?v=2"
+                    alt="Kanopi sentra kuliner SEBAKUL Bintaro dengan slogan Gué Katé Jugé Apé Di Sini Ajé pada malam hari"
                     fill
                     sizes="(max-width: 1024px) 100vw, 55vw"
                     className="object-cover"

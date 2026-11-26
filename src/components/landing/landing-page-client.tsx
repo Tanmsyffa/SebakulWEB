@@ -87,6 +87,13 @@ export function LandingPageClient({
             </button>
             <button
               type="button"
+              onClick={() => scrollToSection('suasana')}
+              className="inline-flex min-h-10 items-center rounded-lg px-3 text-sm text-text-secondary transition-colors hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+            >
+              Suasana
+            </button>
+            <button
+              type="button"
               onClick={() => scrollToSection('komunitas')}
               className="inline-flex min-h-10 items-center rounded-lg px-3 text-sm text-text-secondary transition-colors hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
             >
@@ -152,10 +159,10 @@ export function LandingPageClient({
 
             <FadeIn delay={0.05} className="mt-8 sm:mt-12">
               <figure className="overflow-hidden rounded-xl border border-border-subtle bg-surface">
-                <div className="relative aspect-[16/10] w-full bg-surface-muted sm:aspect-[16/9]">
+                <div className="relative aspect-[16/9] w-full bg-surface-muted">
                   <Image
-                    src="/images/landing-hero.jpg"
-                    alt="Deretan lapak kayu dan area makan sentra kuliner modern dalam cahaya pagi"
+                    src="/images/landing-hero.jpg?v=2"
+                    alt="Suasana malam sentra kuliner SEBAKUL Bintaro dengan papan neon Warkop SEBAKUL Jaksel dan pengunjung di area makan"
                     fill
                     priority
                     sizes="(max-width: 1152px) 100vw, 1152px"
@@ -163,7 +170,7 @@ export function LandingPageClient({
                   />
                 </div>
                 <figcaption className="flex flex-wrap items-center justify-between gap-2 border-t border-border-subtle px-4 py-2.5 text-xs text-text-muted sm:px-5">
-                  <span>Dirancang untuk layar ponsel pedagang maupun meja kerja pengelola</span>
+                  <span>SEBAKUL · Jl. Mawar Raya, Bintaro, Jakarta Selatan</span>
                   <span className="font-mono">WIB · Rupiah bulat</span>
                 </figcaption>
               </figure>
@@ -182,8 +189,8 @@ export function LandingPageClient({
                   <div className="overflow-hidden rounded-xl border border-border-subtle bg-surface-muted">
                     <div className="relative aspect-[4/3] w-full">
                       <Image
-                        src="/images/feature-warung.jpg"
-                        alt="Bahan baku segar dan gelas saji yang tertata di meja persiapan warung"
+                        src="/images/feature-warung.jpg?v=2"
+                        alt="Etalase pempek Palembang dan sajian siap olah di salah satu warung SEBAKUL"
                         fill
                         sizes="(max-width: 1024px) 100vw, 50vw"
                         className="object-cover"
@@ -229,10 +236,10 @@ export function LandingPageClient({
                 </div>
                 <div className="order-1 lg:order-2 lg:col-span-6">
                   <div className="overflow-hidden rounded-xl border border-border-subtle bg-surface-muted">
-                    <div className="relative aspect-[4/3] w-full">
+                    <div className="relative aspect-[16/10] w-full">
                       <Image
-                        src="/images/feature-sentra.jpg"
-                        alt="Halaman sentra kuliner terbuka dengan kios kayu dan area makan bersih"
+                        src="/images/feature-sentra.jpg?v=2"
+                        alt="Deretan lapak warung dan area makan pengunjung di sentra kuliner SEBAKUL pada malam hari"
                         fill
                         sizes="(max-width: 1024px) 100vw, 50vw"
                         className="object-cover"
@@ -244,10 +251,90 @@ export function LandingPageClient({
             </div>
           </section>
 
+          {/* Suasana & Dokumentasi Asli SEBAKUL */}
+          <section
+            id="suasana"
+            className="border-t border-border-subtle bg-canvas"
+          >
+            <div className="mx-auto max-w-6xl space-y-8 px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-end">
+                <div className="space-y-1.5 lg:col-span-6">
+                  <p className="font-mono text-xs text-text-muted">Suasana lokasi</p>
+                  <h2 className="text-xl font-semibold tracking-tight text-text-primary sm:text-2xl">
+                    Potret langsung sentra SEBAKUL Bintaro
+                  </h2>
+                </div>
+                <p className="text-sm leading-relaxed text-text-secondary lg:col-span-6">
+                  Berlokasi di Jl. Mawar Raya RT.4/RW.13, Bintaro, Jakarta Selatan. Menyajikan makanan, minuman, dan jajanan siap saji dengan area duduk santai serta fasilitas parkir dan toilet gratis.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 gap-5 lg:grid-cols-12 lg:items-start">
+                <FadeIn className="lg:col-span-7">
+                  <figure className="overflow-hidden rounded-xl border border-border-subtle bg-surface">
+                    <div className="relative aspect-[16/9] w-full bg-text-primary">
+                      <video
+                        className="h-full w-full object-cover"
+                        controls
+                        playsInline
+                        preload="metadata"
+                        poster="/images/video-poster-suasana.jpg?v=2"
+                        aria-label="Video suasana malam di sentra kuliner SEBAKUL Bintaro"
+                      >
+                        <source src="/videos/sebakul-suasana.mp4" type="video/mp4" />
+                        Browser Anda belum mendukung pemutaran video.
+                      </video>
+                    </div>
+                    <figcaption className="flex flex-wrap items-center justify-between gap-2 border-t border-border-subtle px-4 py-3 text-xs text-text-secondary">
+                      <span>Suasana malam di area lapak dan meja makan SEBAKUL</span>
+                      <span className="font-mono text-text-muted">Video · 0:29</span>
+                    </figcaption>
+                  </figure>
+                </FadeIn>
+
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:col-span-5 lg:grid-cols-1">
+                  <FadeIn delay={0.04}>
+                    <figure className="overflow-hidden rounded-xl border border-border-subtle bg-surface">
+                      <div className="relative aspect-[16/10] w-full bg-surface-muted">
+                        <Image
+                          src="/images/gallery-kanopi.jpg?v=2"
+                          alt="Tampak depan kanopi SEBAKUL dengan slogan Gué Katé Jugé Apé Di Sini Ajé dan lampu hias malam hari"
+                          fill
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 42vw"
+                          className="object-cover"
+                        />
+                      </div>
+                      <figcaption className="border-t border-border-subtle px-4 py-2.5 text-xs text-text-secondary">
+                        Kanopi utama SEBAKUL dengan lampu hias pada malam hari
+                      </figcaption>
+                    </figure>
+                  </FadeIn>
+
+                  <FadeIn delay={0.08}>
+                    <figure className="overflow-hidden rounded-xl border border-border-subtle bg-surface">
+                      <div className="relative aspect-[16/10] w-full bg-surface-muted">
+                        <Image
+                          src="/images/gallery-siang.jpg?v=2"
+                          alt="Tampak luar SEBAKUL di pinggir Jalan Mawar Raya Bintaro pada siang hari"
+                          fill
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 42vw"
+                          className="object-cover"
+                        />
+                      </div>
+                      <figcaption className="border-t border-border-subtle px-4 py-2.5 text-xs text-text-secondary">
+                        Akses masuk langsung dari Jl. Mawar Raya pada siang hari
+                      </figcaption>
+                    </figure>
+                  </FadeIn>
+                </div>
+              </div>
+            </div>
+          </section>
+
           {/* Komunitas Guyub & Tiket */}
           <section
             id="komunitas"
-            className="border-t border-border-subtle bg-canvas"
+            className="border-t border-border-subtle bg-surface"
           >
             <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-4 py-12 sm:px-6 sm:py-16 md:grid-cols-2 md:gap-12 lg:px-8">
               <div className="space-y-2 border-t border-border-strong pt-4">
@@ -274,7 +361,7 @@ export function LandingPageClient({
           {/* Peran & Akses Tertutup */}
           <section
             id="peran-akses"
-            className="border-t border-border-subtle bg-surface"
+            className="border-t border-border-subtle bg-canvas"
           >
             <div className="mx-auto max-w-6xl space-y-10 px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
@@ -330,7 +417,7 @@ export function LandingPageClient({
         </PageTransition>
       </main>
 
-      <footer className="border-t border-border-subtle bg-canvas pb-[env(safe-area-inset-bottom)]">
+      <footer className="border-t border-border-subtle bg-surface pb-[env(safe-area-inset-bottom)]">
         <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-3 px-4 py-6 text-xs text-text-muted sm:flex-row sm:items-center sm:px-6 lg:px-8">
           <div className="space-y-0.5">
             <p className="font-medium text-text-secondary">
