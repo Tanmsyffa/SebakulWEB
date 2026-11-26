@@ -10,6 +10,9 @@ interface TurnstileRenderOptions {
   size?: 'normal' | 'compact' | 'flexible';
   language?: string;
   appearance?: 'always' | 'execute' | 'interaction-only';
+  retry?: 'auto' | 'never';
+  'retry-interval'?: number;
+  'refresh-expired'?: 'auto' | 'manual' | 'never';
   callback?: (token: string) => void;
   'expired-callback'?: () => void;
   'error-callback'?: () => void;
@@ -163,7 +166,11 @@ export const TurnstileWidget = React.forwardRef<TurnstileWidgetHandle, Turnstile
             theme: 'light',
             size: 'flexible',
             language: 'id',
+            retry: 'auto',
+            'retry-interval': 2000,
+            'refresh-expired': 'auto',
             callback: (token) => {
+              setLoadError(false);
               callbacksRef.current.onSuccess(token);
             },
             'expired-callback': () => {
@@ -202,7 +209,7 @@ export const TurnstileWidget = React.forwardRef<TurnstileWidgetHandle, Turnstile
         <div
           ref={containerRef}
           aria-label="Verifikasi keamanan Cloudflare Turnstile"
-          className="min-h-[65px] w-full overflow-hidden rounded-lg"
+          className="min-h-[65px] w-full"
         />
         {loadError && (
           <p className="mt-1.5 text-xs text-status-danger">
