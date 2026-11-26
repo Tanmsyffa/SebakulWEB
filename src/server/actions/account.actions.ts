@@ -8,10 +8,15 @@ import { createServerClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getInternalUser } from '@/server/guards/auth-guard';
 
-export async function changePassword(input: { current: string; next: string }) {
+export async function changePassword(input: {
+  current: string;
+  next: string;
+  captchaToken?: string;
+}) {
   const data = z.object({
     current: z.string().min(1).max(128),
     next: z.string().min(12).max(128),
+    captchaToken: z.string().trim().min(1).max(4096).optional(),
   }).parse(input);
   const supabase = await createServerClient();
   const { data: authData, error: authError } = await supabase.auth.getUser();
@@ -29,8 +34,12 @@ export async function changePassword(input: { current: string; next: string }) {
     const verified = await verifier.auth.signInWithPassword({
       email: authData.user.email,
       password: data.current,
+      ...(data.captchaToken ? { options: { captchaToken: data.captchaToken } } : {}),
     });
     if (verified.error || verified.data.user?.id !== authData.user.id) {
+      if (verified.error && /captcha/i.test(verified.error.message)) {
+        throw new Error('Verifikasi keamanan gagal atau kedaluwarsa. Silakan ulangi.');
+      }
       throw new Error('Kata sandi lama salah atau kata sandi baru belum memenuhi syarat.');
     }
   }

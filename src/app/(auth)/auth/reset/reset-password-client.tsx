@@ -11,9 +11,17 @@ import { Separator } from '@/components/ui/separator';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { requestPasswordResetEmail } from './actions';
 import { AuthCenteredLayout } from '../../_components/auth-shell';
+import {
+  isTurnstileEnabled,
+  TurnstileWidget,
+  type TurnstileWidgetHandle,
+} from '../../_components/turnstile-widget';
 
 export function ResetPasswordClient() {
+  const turnstileRef = React.useRef<TurnstileWidgetHandle>(null);
+  const captchaEnabled = isTurnstileEnabled();
   const [email, setEmail] = React.useState('');
+  const [captchaToken, setCaptchaToken] = React.useState('');
   const [busy, setBusy] = React.useState(false);
   const [emailError, setEmailError] = React.useState('');
   const [errorMessage, setErrorMessage] = React.useState('');
@@ -29,21 +37,35 @@ export function ResetPasswordClient() {
       return;
     }
 
+    if (captchaEnabled && !captchaToken) {
+      setEmailError('');
+      setErrorMessage('Selesaikan verifikasi keamanan terlebih dahulu.');
+      setMessage('');
+      return;
+    }
+
     setEmailError('');
     setErrorMessage('');
     setMessage('');
     setBusy(true);
 
     try {
-      const result = await requestPasswordResetEmail(trimmed);
+      const result = await requestPasswordResetEmail(trimmed, captchaToken || undefined);
       if (result.status === 'fallback_supabase') {
         const supabase = createBrowserClient();
         const { error } = await supabase.auth.resetPasswordForEmail(trimmed, {
           redirectTo: `${window.location.origin}/auth/finish`,
+          ...(captchaToken ? { captchaToken } : {}),
         });
-        if (error && error.status === 429) {
-          setErrorMessage('Terlalu banyak permintaan. Tunggu beberapa saat lalu coba lagi.');
-          return;
+        if (error) {
+          if (error.status === 429) {
+            setErrorMessage('Terlalu banyak permintaan. Tunggu beberapa saat lalu coba lagi.');
+            return;
+          }
+          if (/captcha/i.test(error.message)) {
+            setErrorMessage('Verifikasi keamanan gagal atau kedaluwarsa. Silakan ulangi.');
+            return;
+          }
         }
         setMessage('Jika email terdaftar, tautan pengaturan kata sandi telah dikirim.');
         return;
@@ -58,6 +80,8 @@ export function ResetPasswordClient() {
     } catch {
       setErrorMessage('Tidak dapat terhubung ke layanan autentikasi. Periksa koneksi Anda.');
     } finally {
+      turnstileRef.current?.reset();
+      setCaptchaToken('');
       setBusy(false);
     }
   }
@@ -100,6 +124,20 @@ export function ResetPasswordClient() {
               />
             )}
           </Field>
+
+          {captchaEnabled && (
+            <TurnstileWidget
+              ref={turnstileRef}
+              onSuccess={(token) => {
+                setCaptchaToken(token);
+                setErrorMessage((prev) =>
+                  /verifikasi keamanan/i.test(prev) ? '' : prev
+                );
+              }}
+              onExpire={() => setCaptchaToken('')}
+              onError={() => setCaptchaToken('')}
+            />
+          )}
 
           {errorMessage && (
             <Alert variant="danger" role="alert">

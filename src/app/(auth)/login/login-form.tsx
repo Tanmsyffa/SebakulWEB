@@ -16,6 +16,11 @@ import { FadeIn, PageTransition } from '@/components/motion';
 import { BRAND_FULL_NAME, BRAND_JARGON, BRAND_NAME } from '@/lib/brand';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { PasswordInput } from '../_components/password-input';
+import {
+  isTurnstileEnabled,
+  TurnstileWidget,
+  type TurnstileWidgetHandle,
+} from '../_components/turnstile-widget';
 
 const PLATFORM_SUMMARY = [
   {
@@ -44,8 +49,11 @@ export function LoginForm({
   redirectTo?: string;
 }) {
   const router = useRouter();
+  const turnstileRef = React.useRef<TurnstileWidgetHandle>(null);
+  const captchaEnabled = isTurnstileEnabled();
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const [captchaToken, setCaptchaToken] = React.useState('');
   const [loading, setLoading] = React.useState(false);
   const [signingOut, setSigningOut] = React.useState(false);
   const [error, setError] = React.useState('');
@@ -69,6 +77,12 @@ export function LoginForm({
       return;
     }
 
+    if (captchaEnabled && !captchaToken) {
+      setFieldErrors({});
+      setError('Selesaikan verifikasi keamanan terlebih dahulu.');
+      return;
+    }
+
     setFieldErrors({});
     setLoading(true);
     setError('');
@@ -77,15 +91,25 @@ export function LoginForm({
       const result = await supabase.auth.signInWithPassword({
         email: trimmedEmail,
         password,
+        ...(captchaToken ? { options: { captchaToken } } : {}),
       });
       if (result.error) {
-        setError('Email atau kata sandi salah. Periksa kembali atau hubungi Super Admin.');
+        const isCaptchaError = /captcha/i.test(result.error.message);
+        setError(
+          isCaptchaError
+            ? 'Verifikasi keamanan gagal atau kedaluwarsa. Silakan ulangi.'
+            : 'Email atau kata sandi salah. Periksa kembali atau hubungi Super Admin.'
+        );
+        turnstileRef.current?.reset();
+        setCaptchaToken('');
         return;
       }
       router.replace(redirectTo || '/');
       router.refresh();
     } catch {
       setError('Tidak dapat terhubung. Coba lagi beberapa saat.');
+      turnstileRef.current?.reset();
+      setCaptchaToken('');
     } finally {
       setLoading(false);
     }
@@ -239,6 +263,20 @@ export function LoginForm({
                       />
                     )}
                   </Field>
+
+                  {captchaEnabled && (
+                    <TurnstileWidget
+                      ref={turnstileRef}
+                      onSuccess={(token) => {
+                        setCaptchaToken(token);
+                        setError((prev) =>
+                          /verifikasi keamanan/i.test(prev) ? '' : prev
+                        );
+                      }}
+                      onExpire={() => setCaptchaToken('')}
+                      onError={() => setCaptchaToken('')}
+                    />
+                  )}
 
                   {error && (
                     <Alert variant="danger" role="alert">

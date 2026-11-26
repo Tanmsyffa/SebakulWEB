@@ -13,6 +13,11 @@ import { createBrowserClient } from '@/lib/supabase/client';
 import { changePassword } from '@/server/actions/account.actions';
 import { AuthCenteredLayout } from '../../_components/auth-shell';
 import { PasswordInput } from '../../_components/password-input';
+import {
+  isTurnstileEnabled,
+  TurnstileWidget,
+  type TurnstileWidgetHandle,
+} from '../../_components/turnstile-widget';
 
 export function ChangePasswordClient({
   email,
@@ -22,9 +27,12 @@ export function ChangePasswordClient({
   isForced: boolean;
 }) {
   const router = useRouter();
+  const turnstileRef = React.useRef<TurnstileWidgetHandle>(null);
+  const captchaEnabled = isTurnstileEnabled();
   const [current, setCurrent] = React.useState('');
   const [next, setNext] = React.useState('');
   const [confirm, setConfirm] = React.useState('');
+  const [captchaToken, setCaptchaToken] = React.useState('');
   const [busy, setBusy] = React.useState(false);
   const [message, setMessage] = React.useState('');
   const [fieldErrors, setFieldErrors] = React.useState<{
@@ -55,6 +63,12 @@ export function ChangePasswordClient({
       return;
     }
 
+    if (captchaEnabled && !captchaToken) {
+      setFieldErrors({});
+      setMessage('Selesaikan verifikasi keamanan terlebih dahulu.');
+      return;
+    }
+
     setFieldErrors({});
     setBusy(true);
     setMessage('');
@@ -67,12 +81,18 @@ export function ChangePasswordClient({
     }
 
     try {
-      await changePassword({ current, next });
+      await changePassword({
+        current,
+        next,
+        captchaToken: captchaToken || undefined,
+      });
       await supabase.auth.signOut();
       router.replace('/login?status=password_changed');
       router.refresh();
     } catch (cause) {
       setMessage(formatActionError(cause, 'Gagal mengubah kata sandi.'));
+      turnstileRef.current?.reset();
+      setCaptchaToken('');
     } finally {
       setBusy(false);
     }
@@ -174,6 +194,20 @@ export function ChangePasswordClient({
               />
             )}
           </Field>
+
+          {captchaEnabled && (
+            <TurnstileWidget
+              ref={turnstileRef}
+              onSuccess={(token) => {
+                setCaptchaToken(token);
+                setMessage((prev) =>
+                  /verifikasi keamanan/i.test(prev) ? '' : prev
+                );
+              }}
+              onExpire={() => setCaptchaToken('')}
+              onError={() => setCaptchaToken('')}
+            />
+          )}
 
           {message && (
             <Alert variant="danger" role="alert">

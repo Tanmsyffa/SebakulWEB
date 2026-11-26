@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { db } from '@/db';
 import { auditLogs, users } from '@/db/schema';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { verifyTurnstileToken } from '@/lib/turnstile';
 
 const emailSchema = z
   .string()
@@ -63,7 +64,10 @@ export type RequestPasswordResetResult =
   | { status: 'rate_limited'; message: string }
   | { status: 'error'; message: string };
 
-export async function requestPasswordResetEmail(rawEmail: string): Promise<RequestPasswordResetResult> {
+export async function requestPasswordResetEmail(
+  rawEmail: string,
+  captchaToken?: string
+): Promise<RequestPasswordResetResult> {
   const parsed = emailSchema.safeParse(rawEmail);
   if (!parsed.success) {
     return { status: 'error', message: 'Masukkan alamat email yang valid.' };
@@ -72,6 +76,14 @@ export async function requestPasswordResetEmail(rawEmail: string): Promise<Reque
   const resendApiKey = cleanEnv(process.env.RESEND_API_KEY);
   if (!resendApiKey) {
     return { status: 'fallback_supabase' };
+  }
+
+  const captcha = await verifyTurnstileToken(captchaToken);
+  if (!captcha.ok) {
+    return {
+      status: 'error',
+      message: captcha.error ?? 'Verifikasi keamanan gagal atau kedaluwarsa. Silakan ulangi.',
+    };
   }
 
   const email = parsed.data;
