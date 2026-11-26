@@ -69,7 +69,7 @@ export default async function DashboardLayout({
       />
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 border-b border-border-subtle bg-surface/95 backdrop-blur-xs">
+        <header className="sticky top-0 z-30 border-b border-border-subtle bg-surface/95 pt-[env(safe-area-inset-top)] backdrop-blur-xs">
           <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-2 px-3 sm:gap-3 sm:px-6 lg:px-8">
             <div className="flex min-w-0 flex-1 items-center gap-2.5">
               <BrandLogo size="sm" className="lg:hidden" />

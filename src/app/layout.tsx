@@ -1,27 +1,40 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { BRAND_FULL_NAME, BRAND_JARGON, BRAND_NAME } from "@/lib/brand";
 import { MotionProvider } from "@/components/motion/motion-provider";
 import { RegisterServiceWorker } from "@/components/navigation/register-service-worker";
 import { SkipToContent } from "@/components/navigation/skip-to-content";
 
 export const metadata: Metadata = {
+  applicationName: BRAND_NAME,
   title: {
-    default: "SEBAKUL",
-    template: "%s | SEBAKUL",
+    default: `${BRAND_NAME} - ${BRAND_FULL_NAME}`,
+    template: `%s | ${BRAND_NAME}`,
   },
-  description:
-    "SEBAKUL: sistem manajemen sentra kuliner digital. Kelola lapak, tagihan, inventori, dan komunitas dalam satu platform.",
+  description: `${BRAND_NAME} (${BRAND_FULL_NAME}) - ${BRAND_JARGON} Sistem manajemen operasional sentra kuliner digital.`,
   manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    title: BRAND_NAME,
+    statusBarStyle: "default",
+  },
+  formatDetection: {
+    telephone: false,
+  },
   icons: {
-    icon: "/favicon.ico",
-    apple: "/apple-touch-icon.png",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icons/icon-192x192.png?v=3", sizes: "192x192", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png?v=3", sizes: "180x180", type: "image/png" }],
   },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#0F766E",
+  viewportFit: "cover",
+  themeColor: "#FAF9F6",
 };
 
 export default function RootLayout({

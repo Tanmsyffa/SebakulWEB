@@ -7,6 +7,7 @@ import { ArrowRight } from 'lucide-react';
 import { BrandLogo } from '@/components/ui/brand-logo';
 import { buttonVariants } from '@/components/ui/button';
 import { FadeIn, PageTransition, useHydratedReducedMotion } from '@/components/motion';
+import { BRAND_FULL_NAME, BRAND_JARGON, BRAND_NAME } from '@/lib/brand';
 
 const WARUNG_POINTS = [
   'Buku kas pemasukan dan belanja harian dalam Rupiah bulat berzona waktu WIB.',
@@ -59,15 +60,20 @@ export function LandingPageClient({
 
   return (
     <div className="min-h-screen bg-canvas text-text-primary">
-      <header className="sticky top-0 z-30 border-b border-border-subtle bg-canvas/95 backdrop-blur-xs">
+      <header className="sticky top-0 z-30 border-b border-border-subtle bg-canvas/95 pt-[env(safe-area-inset-top)] backdrop-blur-xs">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
           <Link
             href="/"
             className="inline-flex min-h-10 items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
           >
             <BrandLogo size="sm" priority />
-            <span className="text-sm font-semibold tracking-tight text-text-primary">
-              SEBAKUL
+            <span className="leading-tight">
+              <span className="block text-sm font-semibold tracking-tight text-text-primary">
+                {BRAND_NAME}
+              </span>
+              <span className="hidden text-xs text-text-muted sm:block">
+                {BRAND_FULL_NAME}
+              </span>
             </span>
           </Link>
 
@@ -110,13 +116,16 @@ export function LandingPageClient({
           {/* Editorial Hero */}
           <section className="mx-auto max-w-6xl px-4 pb-12 pt-10 sm:px-6 sm:pb-16 sm:pt-14 lg:px-8 lg:pb-20 lg:pt-18">
             <div className="grid grid-cols-1 items-end gap-8 lg:grid-cols-12 lg:gap-12">
-              <div className="space-y-5 lg:col-span-7">
-                <p className="text-sm text-text-muted">
-                  Sentra Beverages & Kuliner
+              <div className="space-y-4 lg:col-span-7">
+                <p className="text-sm font-medium text-brand-primary">
+                  {BRAND_FULL_NAME}
                 </p>
                 <h1 className="text-3xl font-semibold leading-[1.15] tracking-tight text-text-primary sm:text-4xl lg:text-[2.75rem]">
                   Buku kerja operasional untuk pengelola sentra dan pemilik warung.
                 </h1>
+                <p className="text-sm italic text-text-secondary sm:text-base">
+                  &ldquo;{BRAND_JARGON}&rdquo;
+                </p>
               </div>
               <div className="space-y-5 lg:col-span-5">
                 <p className="text-sm leading-relaxed text-text-secondary sm:text-base">
@@ -321,9 +330,14 @@ export function LandingPageClient({
         </PageTransition>
       </main>
 
-      <footer className="border-t border-border-subtle bg-canvas">
+      <footer className="border-t border-border-subtle bg-canvas pb-[env(safe-area-inset-bottom)]">
         <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-3 px-4 py-6 text-xs text-text-muted sm:flex-row sm:items-center sm:px-6 lg:px-8">
-          <span>SEBAKUL · Sentra Beverages & Kuliner</span>
+          <div className="space-y-0.5">
+            <p className="font-medium text-text-secondary">
+              {BRAND_NAME} · {BRAND_FULL_NAME}
+            </p>
+            <p className="italic">{BRAND_JARGON}</p>
+          </div>
           <div className="flex items-center gap-4">
             <Link href="/login" className="transition-colors hover:text-text-primary">
               Masuk

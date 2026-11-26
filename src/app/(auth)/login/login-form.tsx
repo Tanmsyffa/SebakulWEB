@@ -13,6 +13,7 @@ import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { FadeIn, PageTransition } from '@/components/motion';
+import { BRAND_FULL_NAME, BRAND_JARGON, BRAND_NAME } from '@/lib/brand';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { PasswordInput } from '../_components/password-input';
 
@@ -125,8 +126,13 @@ export function LoginForm({
                 className="inline-flex items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
               >
                 <BrandLogo size="sm" priority />
-                <span className="text-base font-semibold tracking-tight text-text-primary">
-                  SEBAKUL
+                <span className="leading-tight">
+                  <span className="block text-sm font-semibold tracking-tight text-text-primary">
+                    {BRAND_NAME}
+                  </span>
+                  <span className="block text-xs text-text-muted">
+                    {BRAND_FULL_NAME}
+                  </span>
                 </span>
               </Link>
               <Link
@@ -280,8 +286,13 @@ export function LoginForm({
                   className="inline-flex items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
                 >
                   <BrandLogo size="sm" priority />
-                  <span className="text-base font-semibold tracking-tight text-text-primary">
-                    SEBAKUL
+                  <span className="leading-tight">
+                    <span className="block text-sm font-semibold tracking-tight text-text-primary">
+                      {BRAND_NAME}
+                    </span>
+                    <span className="block text-xs text-text-muted">
+                      {BRAND_FULL_NAME}
+                    </span>
                   </span>
                 </Link>
                 <Link
@@ -301,6 +312,9 @@ export function LoginForm({
                     sizes="(max-width: 1024px) 100vw, 55vw"
                     className="object-cover"
                   />
+                </div>
+                <div className="border-t border-border-subtle px-4 py-2.5 text-xs italic text-text-secondary">
+                  &ldquo;{BRAND_JARGON}&rdquo;
                 </div>
               </div>
 

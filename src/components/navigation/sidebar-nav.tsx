@@ -94,9 +94,10 @@ export function SidebarNav({
       <div className="border-t border-border-subtle px-4 py-3">
         <Link
           href="/?view=landing"
-          className="text-xs text-text-muted transition-colors hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary rounded"
+          className="block rounded text-xs text-text-muted transition-colors hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
         >
-          SEBAKUL Sentra Kuliner
+          <span className="block font-medium text-text-secondary">SEBAKUL</span>
+          <span className="block">SEntra Beverages And KULiner</span>
         </Link>
       </div>
     </aside>

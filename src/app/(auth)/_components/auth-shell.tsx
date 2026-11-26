@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { BrandLogo } from '@/components/ui/brand-logo';
 import { Card, CardContent } from '@/components/ui/card';
 import { PageTransition } from '@/components/motion';
+import { BRAND_FULL_NAME, BRAND_NAME } from '@/lib/brand';
 
 export function AuthCenteredLayout({
   children,
@@ -24,10 +25,10 @@ export function AuthCenteredLayout({
             <BrandLogo size="md" priority />
             <span className="text-left">
               <span className="block text-sm font-semibold tracking-tight text-text-primary">
-                SEBAKUL
+                {BRAND_NAME}
               </span>
               <span className="block text-xs text-text-muted">
-                Sentra Beverages & Kuliner
+                {BRAND_FULL_NAME}
               </span>
             </span>
           </Link>

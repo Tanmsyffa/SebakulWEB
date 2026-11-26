@@ -169,10 +169,10 @@ export function ErrorStatePage({
         {card}
       </main>
 
-      <footer className="border-t border-border-subtle bg-surface py-4">
+      <footer className="border-t border-border-subtle bg-surface pb-[env(safe-area-inset-bottom)] py-4">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-4 text-xs text-text-muted sm:flex-row sm:px-6 lg:px-8">
-          <span>SEBAKUL · Sistem Manajemen Sentra Kuliner</span>
-          <span>Informasi teknis hanya dicatat pada sisi server demi keamanan data.</span>
+          <span>SEBAKUL · SEntra Beverages And KULiner</span>
+          <span className="italic">Gué Katé Jugé Apé... Di Sini Ajé...</span>
         </div>
       </footer>
     </div>
